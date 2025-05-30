@@ -5,16 +5,6 @@
  * @returns {string} Formatted string with proper decimal places
  */
 export function formatDecimalAmount(value, decimals) {
-    // Debug logging
-    console.log('formatDecimalAmount input:', { 
-        value, 
-        type: typeof value, 
-        decimals,
-        isNull: value === null,
-        isUndefined: value === undefined,
-        isNaN: isNaN(value),
-        constructor: value?.constructor?.name
-    });
 
     // Handle zero case and invalid inputs
     if (value === null || value === undefined || value === "0" || value === "" || value === 0) {
@@ -25,7 +15,6 @@ export function formatDecimalAmount(value, decimals) {
         // Convert to string if it's a number or any other type
         if (typeof value !== 'string') {
             value = String(value);
-            console.log('Converted to string:', value);
         }
 
         // Additional validation
@@ -36,7 +25,6 @@ export function formatDecimalAmount(value, decimals) {
 
         // Remove any existing commas and trim whitespace
         value = value.replace(/,/g, "").trim();
-        console.log('After comma removal:', value);
 
         // Validate after trim
         if (!value) {
@@ -51,20 +39,16 @@ export function formatDecimalAmount(value, decimals) {
 
         // Pad the value with leading zeros if needed
         value = value.padStart(decimals + 1, "0");
-        console.log('After padding:', value);
 
         // Split into whole and fractional parts
         const wholePart = value.slice(0, -decimals) || "0";
         const fractionPart = value.slice(-decimals);
-        console.log('Split parts:', { wholePart, fractionPart });
 
         // Format the whole part with commas
         const formattedWhole = formatWithCommas(wholePart);
-        console.log('Formatted whole:', formattedWhole);
 
         // Combine parts and remove trailing zeros
         const result = trimTrailingZeroes(`${formattedWhole}.${fractionPart}`);
-        console.log('Final result:', result);
         return result;
     } catch (error) {
         console.error('Error in formatDecimalAmount:', error, {
