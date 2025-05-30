@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getChainDisplayName } from '../utils/chainNames';
+import { getChainDisplayName } from '../../utils/chainNames';
 
 export default function ChainSelector({ tokens, selectedAsset, onChainSelect }) {
   if (!selectedAsset) return null;

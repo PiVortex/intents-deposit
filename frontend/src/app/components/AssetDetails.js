@@ -1,5 +1,7 @@
 'use client';
 
+import { formatDecimalAmount } from '../../utils/format';
+
 export default function AssetDetails({ asset }) {
   if (!asset) return null;
 
@@ -30,20 +32,16 @@ export default function AssetDetails({ asset }) {
           <p className="font-medium text-gray-700 mt-1 break-all">{asset.near_token_id}</p>
         </div>
         <div className="bg-white p-4 rounded-md shadow-sm">
-          <p className="text-sm text-indigo-500">Decimals</p>
-          <p className="font-medium text-gray-700 mt-1">{asset.decimals}</p>
-        </div>
-        <div className="bg-white p-4 rounded-md shadow-sm">
           <p className="text-sm text-indigo-500">Min Deposit</p>
-          <p className="font-medium text-gray-700 mt-1">{asset.min_deposit_amount}</p>
+          <p className="font-medium text-gray-700 mt-1">{formatDecimalAmount(asset.min_deposit_amount, asset.decimals)}</p>
         </div>
         <div className="bg-white p-4 rounded-md shadow-sm">
           <p className="text-sm text-indigo-500">Min Withdrawal</p>
-          <p className="font-medium text-gray-700 mt-1">{asset.min_withdrawal_amount}</p>
+          <p className="font-medium text-gray-700 mt-1">{formatDecimalAmount(asset.min_withdrawal_amount, asset.decimals)}</p>
         </div>
         <div className="bg-white p-4 rounded-md shadow-sm">
           <p className="text-sm text-indigo-500">Withdrawal Fee</p>
-          <p className="font-medium text-gray-700 mt-1">{asset.withdrawal_fee}</p>
+          <p className="font-medium text-gray-700 mt-1">{formatDecimalAmount(asset.withdrawal_fee, asset.decimals)}</p>
         </div>
       </div>
     </details>

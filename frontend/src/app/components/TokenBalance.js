@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
+import { formatDecimalAmount } from '../../utils/format';
 
 export default function TokenBalance({ tokenId, decimals }) {
   const { signedAccountId, viewFunction } = useWalletSelector();
@@ -66,15 +67,6 @@ export default function TokenBalance({ tokenId, decimals }) {
     return () => clearInterval(intervalId);
   }, [signedAccountId, tokenId, viewFunction]);
 
-  const formatBalance = (rawBalance) => {
-    if (!rawBalance || !decimals) return '0';
-    const actualBalance = Number(rawBalance) / Math.pow(10, decimals);
-    return actualBalance.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6
-    });
-  };
-
   if (!signedAccountId) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
@@ -113,7 +105,7 @@ export default function TokenBalance({ tokenId, decimals }) {
       <h3 className="text-lg font-semibold text-indigo-600 mb-2">Token Balance</h3>
       <div className="text-gray-700">
         <div className="space-y-1">
-          <div className="font-mono">{formatBalance(balance)}</div>
+          <div className="font-mono">{formatDecimalAmount(balance, decimals)}</div>
           {standard && (
             <div className="text-sm text-indigo-500">Using {standard}</div>
           )}

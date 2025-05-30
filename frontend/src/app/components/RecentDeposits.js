@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
+import { formatDecimalAmount } from '../../utils/format';
 
 export default function RecentDeposits({ selectedAsset }) {
   const { signedAccountId } = useWalletSelector();
@@ -66,14 +67,6 @@ export default function RecentDeposits({ selectedAsset }) {
     return () => clearInterval(intervalId);
   }, [selectedAsset]);
 
-  const formatAmount = (amount, decimals) => {
-    const actualAmount = Number(amount) / Math.pow(10, decimals);
-    return actualAmount.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6
-    });
-  };
-
   if (!selectedAsset) return null;
 
   if (error) {
@@ -101,7 +94,7 @@ export default function RecentDeposits({ selectedAsset }) {
                 <div>
                   <span className="text-gray-600">Amount:</span>
                   <span className="ml-2 font-mono text-gray-800">
-                    {formatAmount(deposit.amount, deposit.decimals)}
+                    {formatDecimalAmount(deposit.amount, deposit.decimals)}
                   </span>
                 </div>
                 <div>

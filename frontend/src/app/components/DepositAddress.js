@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getChainDisplayName } from '../utils/chainNames';
+import { getChainDisplayName } from '../../utils/chainNames';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
 export default function DepositAddress({ selectedAsset }) {
