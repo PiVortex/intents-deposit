@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@near-wallet-selector/meteor-wallet": "9.0.2",
+    "@near-wallet-selector/modal-ui": "9.0.2",
+    "@near-wallet-selector/react-hook": "9.0.2",
+    "@near-wallet-selector/core": "9.0.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "next": "15.3.3"

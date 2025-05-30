@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { getChainDisplayName } from '../utils/chainNames';
-import { config } from '../config';
+import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
 export default function DepositAddress({ selectedAsset }) {
+  const { signedAccountId } = useWalletSelector();
   const [depositInfo, setDepositInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchDepositAddress() {
-      if (!selectedAsset) return;
+      if (!selectedAsset || !signedAccountId) return;
 
       setIsLoading(true);
       setError(null);
@@ -31,7 +32,7 @@ export default function DepositAddress({ selectedAsset }) {
             method: "deposit_address",
             params: [
               {
-                account_id: config.accountId,
+                account_id: signedAccountId,
                 chain: chain,
               },
             ],
@@ -53,7 +54,7 @@ export default function DepositAddress({ selectedAsset }) {
     }
 
     fetchDepositAddress();
-  }, [selectedAsset]);
+  }, [selectedAsset, signedAccountId]);
 
   const handleCopy = async () => {
     if (!depositInfo?.address) return;
@@ -65,6 +66,17 @@ export default function DepositAddress({ selectedAsset }) {
   };
 
   if (!selectedAsset) return null;
+
+  if (!signedAccountId) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100">
+        <h2 className="text-xl font-semibold text-indigo-600 mb-4">Deposit Information</h2>
+        <div className="text-center py-6">
+          <p className="text-gray-600">Please connect your wallet to view deposit information</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

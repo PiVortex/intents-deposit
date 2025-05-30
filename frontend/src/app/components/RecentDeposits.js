@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { config } from '../config';
+import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
 export default function RecentDeposits({ selectedAsset }) {
+  const { signedAccountId } = useWalletSelector();
   const [deposits, setDeposits] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,7 +27,7 @@ export default function RecentDeposits({ selectedAsset }) {
             method: "recent_deposits",
             params: [
               {
-                account_id: config.accountId,
+                account_id: signedAccountId,
                 chain: chain,
               },
             ],
