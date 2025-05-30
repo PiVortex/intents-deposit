@@ -54,6 +54,15 @@ export default function DepositAddress({ selectedAsset }) {
     fetchDepositAddress();
   }, [selectedAsset]);
 
+  const handleCopy = async () => {
+    if (!depositInfo?.address) return;
+    try {
+      await navigator.clipboard.writeText(depositInfo.address);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   if (!selectedAsset) return null;
 
   if (error) {
@@ -84,7 +93,15 @@ export default function DepositAddress({ selectedAsset }) {
         </div>
         <div>
           <span className="text-gray-600">Address:</span>
-          <span className="ml-2 font-mono text-gray-800 break-all">{depositInfo.address}</span>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="font-mono text-gray-800 break-all">{depositInfo.address}</span>
+            <button
+              onClick={handleCopy}
+              className="px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors duration-200"
+            >
+              Copy
+            </button>
+          </div>
         </div>
       </div>
     </div>

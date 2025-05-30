@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { getChainDisplayName } from '../utils/chainNames';
 
 export default function ChainSelector({ tokens, selectedAsset, onChainSelect }) {
@@ -8,10 +9,16 @@ export default function ChainSelector({ tokens, selectedAsset, onChainSelect }) 
   // Get all tokens with the same asset name
   const availableChains = tokens.filter(token => token.asset_name === selectedAsset.asset_name);
 
+  // Use useEffect to handle automatic chain selection
+  useEffect(() => {
+    if (availableChains.length === 1) {
+      onChainSelect(availableChains[0]);
+    }
+  }, [availableChains, onChainSelect]);
+
   // If there's only one chain available, just display it
   if (availableChains.length === 1) {
     const chain = availableChains[0].defuse_asset_identifier.split(':').slice(0, 2).join(':');
-    onChainSelect(tokens[0]);
     return (
       <div className="mb-6">
         <div className="text-gray-600 mb-2">Chain:</div>
