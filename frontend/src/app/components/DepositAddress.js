@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getChainDisplayName } from '../utils/chainNames';
+import { config } from '../config';
 
 export default function DepositAddress({ selectedAsset }) {
   const [depositInfo, setDepositInfo] = useState(null);
@@ -30,7 +31,7 @@ export default function DepositAddress({ selectedAsset }) {
             method: "deposit_address",
             params: [
               {
-                account_id: "test-account.near", 
+                account_id: config.accountId,
                 chain: chain,
               },
             ],

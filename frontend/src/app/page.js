@@ -5,6 +5,7 @@ import AssetSelector from './components/AssetSelector';
 import ChainSelector from './components/ChainSelector';
 import AssetDetails from './components/AssetDetails';
 import DepositAddress from './components/DepositAddress';
+import RecentDeposits from './components/RecentDeposits';
 
 export default function Home() {
   const [tokens, setTokens] = useState([]);
@@ -38,6 +39,7 @@ export default function Home() {
               <>
                 <AssetDetails asset={selectedToken} />
                 <DepositAddress selectedAsset={selectedToken} />
+                <RecentDeposits selectedAsset={selectedToken} />
               </>
             )}
           </>

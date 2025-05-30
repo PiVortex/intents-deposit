@@ -32,6 +32,7 @@ export default function AssetSelector({ onAssetSelect, onTokensLoaded }) {
         }
 
         const data = await response.json();
+        console.log(data)
         setLocalTokens(data.result.tokens);
         onTokensLoaded(data.result.tokens);
       } catch (error) {
