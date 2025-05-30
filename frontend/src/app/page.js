@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AssetDetails from './components/AssetDetails';
+import AssetSelector from './components/AssetSelector';
 
 export default function Home() {
   const [tokens, setTokens] = useState([]);
@@ -16,6 +18,8 @@ export default function Home() {
           throw new Error('Failed to fetch assets');
         }
         const data = await response.json();
+        console.log('Received tokens in frontend:', data.length);
+        console.log('Token identifiers:', data.map(t => t.defuse_asset_identifier));
         setTokens(data);
       } catch (error) {
         console.error("Error fetching assets:", error);
@@ -27,11 +31,6 @@ export default function Home() {
 
     fetchAssets();
   }, []);
-
-  const handleAssetSelect = (event) => {
-    const selectedToken = tokens.find(token => token.asset_name === event.target.value);
-    setSelectedAsset(selectedToken);
-  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -47,53 +46,13 @@ export default function Home() {
         {isLoading ? (
           <div className="text-indigo-600 bg-indigo-50 p-4 rounded-lg">Loading assets...</div>
         ) : (
-          <div className="mb-6">
-            <select
-              id="asset-select"
-              onChange={handleAssetSelect}
-              className="block w-full max-w-xs px-3 py-2 bg-white border-2 border-indigo-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-700"
-            >
-              <option value="">Select an asset...</option>
-              {tokens.map((token) => (
-                <option key={token.defuse_asset_identifier} value={token.asset_name}>
-                  {token.asset_name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <AssetSelector 
+            tokens={tokens} 
+            onAssetSelect={setSelectedAsset} 
+          />
         )}
 
-        {selectedAsset && (
-          <div className="bg-indigo-50 shadow-lg rounded-lg p-6 border-2 border-indigo-100">
-            <h2 className="text-xl font-semibold mb-4 text-indigo-600">Selected Asset Details</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white p-3 rounded-md shadow-sm">
-                <p className="text-sm text-indigo-500">Asset Name</p>
-                <p className="font-medium text-gray-700">{selectedAsset.asset_name}</p>
-              </div>
-              <div className="bg-white p-3 rounded-md shadow-sm">
-                <p className="text-sm text-indigo-500">Asset Identifier</p>
-                <p className="font-medium text-gray-700">{selectedAsset.defuse_asset_identifier}</p>
-              </div>
-              <div className="bg-white p-3 rounded-md shadow-sm">
-                <p className="text-sm text-indigo-500">Decimals</p>
-                <p className="font-medium text-gray-700">{selectedAsset.decimals}</p>
-              </div>
-              <div className="bg-white p-3 rounded-md shadow-sm">
-                <p className="text-sm text-indigo-500">Min Deposit</p>
-                <p className="font-medium text-gray-700">{selectedAsset.min_deposit_amount}</p>
-              </div>
-              <div className="bg-white p-3 rounded-md shadow-sm">
-                <p className="text-sm text-indigo-500">Min Withdrawal</p>
-                <p className="font-medium text-gray-700">{selectedAsset.min_withdrawal_amount}</p>
-              </div>
-              <div className="bg-white p-3 rounded-md shadow-sm">
-                <p className="text-sm text-indigo-500">Withdrawal Fee</p>
-                <p className="font-medium text-gray-700">{selectedAsset.withdrawal_fee}</p>
-              </div>
-            </div>
-          </div>
-        )}
+        <AssetDetails asset={selectedAsset} />
       </div>
     </div>
   );
