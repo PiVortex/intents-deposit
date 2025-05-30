@@ -38,8 +38,10 @@ export default function Home() {
             {selectedToken && (
               <>
                 <AssetDetails asset={selectedToken} />
-                <DepositAddress selectedAsset={selectedToken} />
-                <RecentDeposits selectedAsset={selectedToken} />
+                <div className="mt-8">
+                  <DepositAddress selectedAsset={selectedToken} />
+                  <RecentDeposits selectedAsset={selectedToken} />
+                </div>
               </>
             )}
           </>
