@@ -13,7 +13,7 @@ export default function Home() {
 
   const handleAssetSelect = (asset) => {
     setSelectedAsset(asset);
-    setSelectedToken(null); // Reset selected token when asset changes
+    setSelectedToken(null); 
   };
 
   return (

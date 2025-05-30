@@ -11,6 +11,7 @@ export default function ChainSelector({ tokens, selectedAsset, onChainSelect }) 
   // If there's only one chain available, just display it
   if (availableChains.length === 1) {
     const chain = availableChains[0].defuse_asset_identifier.split(':').slice(0, 2).join(':');
+    onChainSelect(tokens[0]);
     return (
       <div className="mb-6">
         <div className="text-gray-600 mb-2">Chain:</div>
