@@ -6,6 +6,7 @@ import ChainSelector from './components/ChainSelector';
 import AssetDetails from './components/AssetDetails';
 import DepositAddress from './components/DepositAddress';
 import RecentDeposits from './components/RecentDeposits';
+import TokenBalance from './components/TokenBalance';
 
 export default function Home() {
   const [tokens, setTokens] = useState([]);
@@ -39,6 +40,10 @@ export default function Home() {
               <>
                 <AssetDetails asset={selectedToken} />
                 <div className="mt-8">
+                  <TokenBalance 
+                    tokenId={selectedToken.near_token_id} 
+                    decimals={selectedToken.decimals}
+                  />
                   <DepositAddress selectedAsset={selectedToken} />
                   <RecentDeposits selectedAsset={selectedToken} />
                 </div>
