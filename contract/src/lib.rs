@@ -1,12 +1,14 @@
-use near_sdk::{log, near, AccountId, PromiseOrValue, require, env, PanicOnDefault, BorshStorageKey};
-use near_sdk::store::{IterableMap, LookupMap};
 use near_sdk::json_types::U128;
+use near_sdk::store::{IterableMap, LookupMap};
+use near_sdk::{
+    env, log, near, require, AccountId, BorshStorageKey, PanicOnDefault, PromiseOrValue,
+};
 
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
 pub struct Contract {
     intents_contract_id: AccountId,
-    balances: LookupMap<AccountId, IterableMap<TokenId, u128>>
+    balances: LookupMap<AccountId, IterableMap<TokenId, u128>>,
 }
 
 #[derive(BorshStorageKey)]
@@ -38,7 +40,7 @@ impl Contract {
     ) -> PromiseOrValue<Vec<U128>> {
         let _ = sender_id;
         let _ = msg;
-        
+
         require!(
             token_ids.len() == 1,
             "This contract only accepts one token at a time"
@@ -51,15 +53,12 @@ impl Contract {
             env::predecessor_account_id() == self.intents_contract_id,
             "Only accepts the intents.near multi-token contract"
         );
-        
+
         let token_id = &token_ids[0];
         let previous_owner_id = &previous_owner_ids[0];
         let amount = &amounts[0];
 
-        require!(
-            amount.0 > 0,
-            "Amount must be greater than 0"
-        );
+        require!(amount.0 > 0, "Amount must be greater than 0");
 
         let tokens = self.get_or_create_token_map(previous_owner_id.clone());
         tokens.insert(token_id.clone(), amount.0);
@@ -72,13 +71,19 @@ impl Contract {
     pub fn withdraw_all(&mut self, account: AccountId, token: TokenId) {
         // TODO
     }
-    
-    pub fn get_tokens_for_account(&self, account: AccountId, from_index: &Option<u32>, limit: &Option<u32>) -> Vec<(TokenId, U128)> {
+
+    pub fn get_tokens_for_account(
+        &self,
+        account: AccountId,
+        from_index: &Option<u32>,
+        limit: &Option<u32>,
+    ) -> Vec<(TokenId, U128)> {
         if let Some(balance) = self.balances.get(&account) {
             let from = from_index.unwrap_or(0);
             let limit = limit.unwrap_or(balance.len() as u32);
-            
-            balance.iter()
+
+            balance
+                .iter()
                 .skip(from as usize)
                 .take(limit as usize)
                 .map(|(token, amount)| (token.clone(), U128::from(*amount)))
@@ -89,9 +94,13 @@ impl Contract {
     }
 
     // Internal helper function
-    fn get_or_create_token_map(&mut self, account_id: AccountId) -> &mut IterableMap<TokenId, u128> {
+    fn get_or_create_token_map(
+        &mut self,
+        account_id: AccountId,
+    ) -> &mut IterableMap<TokenId, u128> {
         if !self.balances.contains_key(&account_id) {
-            self.balances.insert(account_id.clone(), IterableMap::new(b"t".to_vec()));
+            self.balances
+                .insert(account_id.clone(), IterableMap::new(b"t".to_vec()));
         }
         self.balances.get_mut(&account_id).unwrap()
     }
