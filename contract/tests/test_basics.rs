@@ -1,8 +1,6 @@
-use near_sdk::json_types::U128;
 use near_sdk::near;
 use near_workspaces::result::ExecutionFinalResult;
 use near_workspaces::types::{AccountId, Gas, NearToken};
-use near_workspaces::{Account, Contract};
 use serde_json::json;
 use serde::Serialize;
 use near_sdk_v4::Balance;
@@ -70,8 +68,9 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     assert!(res.is_success(), "MT contract initialization failed {:?}", res);
 
-    let token_metadata = TokenMetadata  {
-        title: Some("My Token".to_string()),
+    // After initializing the MT contract, mint two tokens
+    let token_metadata_1 = TokenMetadata {
+        title: Some("Token 1".to_string()),
         description: None,
         media: None,
         media_hash: None,
@@ -84,91 +83,97 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         reference_hash: None,
     };
 
-    // Create a new token
+    let token_metadata_2 = TokenMetadata {
+        title: Some("Token 2".to_string()),
+        description: None,
+        media: None,
+        media_hash: None,
+        issued_at: None,
+        expires_at: None,
+        starts_at: None,
+        updated_at: None,
+        extra: None,
+        reference: None,
+        reference_hash: None,
+    };
+
+    // Mint first token
     let supply: Balance = 1000u128;
     res = mt_admin
         .call(mt_contract.id(), "mt_mint")
         .args_json(json!({
             "token_owner_id": mt_admin.id(),
-            "token_metadata": token_metadata,
+            "token_metadata": token_metadata_1,
             "supply": supply 
         }))
         .deposit(NearToken::from_near(1)) 
         .transact()
         .await?;
 
-        
-    assert!(res.is_success(), "Token minting failed {:?}", res);
+        assert!(res.is_success(), "Token 1 minting failed {:?}", res);
 
-    // Register accounts in mt contract and send tokens to them
+    // Mint second token
+    res = mt_admin
+        .call(mt_contract.id(), "mt_mint")
+        .args_json(json!({
+            "token_owner_id": mt_admin.id(),
+            "token_metadata": token_metadata_2,
+            "supply": supply 
+        }))
+        .deposit(NearToken::from_near(1)) 
+        .transact()
+        .await?;
+
+        assert!(res.is_success(), "Token 2 minting failed {:?}", res);
+
+    // Register accounts for both tokens
     for account in [
         alice.clone(),
         bob.clone(),
         contract_account.clone(),
-    ]
-    .iter()
-    {
-        let register = account
-            .call(mt_contract.id(), "register")
-            .args_json(serde_json::json!({"token_id": "1", "account_id": account.id() }))
-            .transact()
-            .await?;
-
-        assert!(register.is_success(), "Account registration failed {:?}", register);
+    ].iter() {
+        // Register for both tokens
+        register_account(account, &mt_contract, "1").await?;
+        register_account(account, &mt_contract, "2").await?;
 
         // Don't send tokens to the contract account
         if account.id() == contract_account.id() {
             continue;
         }
 
-        let transfer = mt_admin
-            .call(mt_contract.id(), "mt_transfer")
-            .args_json(serde_json::json!({"token_id": "1", "receiver_id": account.id(), "amount": "100" }))
-            .deposit(NearToken::from_yoctonear(1))
-            .transact()
-            .await?;
-
-        assert!(transfer.is_success(), "Token transfer failed {:?}", transfer);
+        // Transfer both tokens
+        transfer_tokens(&mt_admin, &mt_contract, account.id(), "1", "100").await?;
+        transfer_tokens(&mt_admin, &mt_contract, account.id(), "2", "100").await?;
     }
 
-    // Alice deposits 50 tokens in the contract
-    res = alice
-        .call(mt_contract.id(), "mt_transfer_call")
-        .args_json(serde_json::json!({
-            "receiver_id": contract.id(),
-            "token_id": "1",
-            "amount": "50",
-            "msg": "Random message"
-        }))
-        .deposit(NearToken::from_yoctonear(1))
-        .gas(Gas::from_tgas(100))
-        .transact()
-        .await?;
+    // Alice deposits both tokens in the contract
+    transfer_call_tokens(
+        &alice,
+        &mt_contract,
+        contract.id(),
+        "1",
+        "50",
+        "Random message"
+    ).await?;
 
-    assert!(res.is_success(), "Token transfer failed {:?}", res);
+    transfer_call_tokens(
+        &alice,
+        &mt_contract,
+        contract.id(),
+        "2",
+        "30",
+        "Random message"
+    ).await?;
 
-    // Check if the contract has received the tokens
-    let balance = contract_account
-        .call(mt_contract.id(), "mt_balance_of")
-        .args_json(serde_json::json!({"account_id": contract_account.id(), "token_id": "1"}))
-        .transact()
-        .await?;
+    // Check balances for both tokens
+    check_balance(&contract_account, &mt_contract, "1", "50").await?;
+    check_balance(&contract_account, &mt_contract, "2", "30").await?;
 
-    let balance_value: String = balance.json()?;
-    assert_eq!(balance_value, "50", "Expected balance to be 50, got {}", balance_value);
-
-    let tokens = contract_account
-        .call(contract.id(), "get_tokens_for_account")
-        .args_json(serde_json::json!({
-            "account": contract_account.id(),
-            "from_index": null,
-            "limit": null
-        }))
-        .transact()
-        .await?;
-
-    let tokens_value: Vec<(String, String)> = tokens.json()?;
-    println!("Tokens for contract: {:?}", tokens_value);
+    // Check all tokens for Alice in the contract
+    let tokens_value = get_tokens_for_account(&contract, &contract_account, &alice.id()).await?;
+    assert_eq!(tokens_value.len(), 2, "Expected 2 tokens for Alice, got {}", tokens_value.len());
+    assert!(tokens_value.contains(&("1".to_string(), "50".to_string())), "Expected token 1 with balance 50");
+    assert!(tokens_value.contains(&("2".to_string(), "30".to_string())), "Expected token 2 with balance 30");
 
     Ok(())
 }
@@ -186,4 +191,105 @@ async fn create_subaccount(
         .unwrap();
 
     Ok(subaccount)
+}
+
+async fn check_balance(
+    account: &near_workspaces::Account,
+    mt_contract: &near_workspaces::Contract,
+    token_id: &str,
+    expected_balance: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let balance = account
+        .call(mt_contract.id(), "mt_balance_of")
+        .args_json(serde_json::json!({
+            "account_id": account.id(),
+            "token_id": token_id
+        }))
+        .transact()
+        .await?;
+    let balance_value: String = balance.json()?;
+    assert_eq!(balance_value, expected_balance, 
+        "Expected balance of token {} to be {}, got {}", token_id, expected_balance, balance_value);
+    Ok(())
+}
+
+async fn register_account(
+    account: &near_workspaces::Account,
+    mt_contract: &near_workspaces::Contract,
+    token_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let register = account
+        .call(mt_contract.id(), "register")
+        .args_json(serde_json::json!({
+            "token_id": token_id,
+            "account_id": account.id()
+        }))
+        .transact()
+        .await?;
+    assert!(register.is_success(), "Account registration for token {} failed {:?}", token_id, register);
+    Ok(())
+}
+
+async fn transfer_tokens(
+    sender: &near_workspaces::Account,
+    mt_contract: &near_workspaces::Contract,
+    receiver_id: &AccountId,
+    token_id: &str,
+    amount: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let transfer = sender
+        .call(mt_contract.id(), "mt_transfer")
+        .args_json(serde_json::json!({
+            "token_id": token_id,
+            "receiver_id": receiver_id,
+            "amount": amount
+        }))
+        .deposit(NearToken::from_yoctonear(1))
+        .transact()
+        .await?;
+    assert!(transfer.is_success(), "Token {} transfer failed {:?}", token_id, transfer);
+    Ok(())
+}
+
+async fn transfer_call_tokens(
+    sender: &near_workspaces::Account,
+    mt_contract: &near_workspaces::Contract,
+    receiver_id: &AccountId,
+    token_id: &str,
+    amount: &str,
+    msg: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let res = sender
+        .call(mt_contract.id(), "mt_transfer_call")
+        .args_json(serde_json::json!({
+            "receiver_id": receiver_id,
+            "token_id": token_id,
+            "amount": amount,
+            "msg": msg
+        }))
+        .deposit(NearToken::from_yoctonear(1))
+        .gas(Gas::from_tgas(100))
+        .transact()
+        .await?;
+    assert!(res.is_success(), "Token {} transfer_call failed {:?}", token_id, res);
+    Ok(())
+}
+
+async fn get_tokens_for_account(
+    contract: &near_workspaces::Contract,
+    account: &near_workspaces::Account,
+    target_account: &AccountId,
+) -> Result<Vec<(String, String)>, Box<dyn std::error::Error>> {
+    let tokens = account
+        .call(contract.id(), "get_tokens_for_account")
+        .args_json(serde_json::json!({
+            "account": target_account,
+            "from_index": null,
+            "limit": null
+        }))
+        .transact()
+        .await?;
+
+    let tokens_value: Vec<(String, String)> = tokens.json()?;
+    Ok(tokens_value)
 }
