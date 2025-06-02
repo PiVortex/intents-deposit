@@ -1,9 +1,9 @@
 use near_sdk::near;
+use near_sdk_v4::Balance;
 use near_workspaces::result::ExecutionFinalResult;
 use near_workspaces::types::{AccountId, Gas, NearToken};
-use serde_json::json;
 use serde::Serialize;
-use near_sdk_v4::Balance;
+use serde_json::json;
 
 #[near]
 #[derive(Serialize)]
@@ -23,7 +23,6 @@ pub struct TokenMetadata {
 
 const TEN_NEAR: NearToken = NearToken::from_near(10);
 const MT_WASM_FILEPATH: &str = "./tests/multi_token.wasm";
-
 
 #[tokio::test]
 async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>> {
@@ -45,9 +44,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     // Initialize the contract
     let mut res: ExecutionFinalResult = contract
         .call("new")
-        .args_json(
-                json!({"intents_contract_id": mt_contract_account.id() }),
-        )
+        .args_json(json!({"intents_contract_id": mt_contract_account.id() }))
         .transact()
         .await?;
 
@@ -66,7 +63,11 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .transact()
         .await?;
 
-    assert!(res.is_success(), "MT contract initialization failed {:?}", res);
+    assert!(
+        res.is_success(),
+        "MT contract initialization failed {:?}",
+        res
+    );
 
     // After initializing the MT contract, mint two tokens
     let token_metadata_1 = TokenMetadata {
@@ -104,13 +105,13 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .args_json(json!({
             "token_owner_id": mt_admin.id(),
             "token_metadata": token_metadata_1,
-            "supply": supply 
+            "supply": supply
         }))
-        .deposit(NearToken::from_near(1)) 
+        .deposit(NearToken::from_near(1))
         .transact()
         .await?;
 
-        assert!(res.is_success(), "Token 1 minting failed {:?}", res);
+    assert!(res.is_success(), "Token 1 minting failed {:?}", res);
 
     // Mint second token
     res = mt_admin
@@ -118,20 +119,16 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .args_json(json!({
             "token_owner_id": mt_admin.id(),
             "token_metadata": token_metadata_2,
-            "supply": supply 
+            "supply": supply
         }))
-        .deposit(NearToken::from_near(1)) 
+        .deposit(NearToken::from_near(1))
         .transact()
         .await?;
 
-        assert!(res.is_success(), "Token 2 minting failed {:?}", res);
+    assert!(res.is_success(), "Token 2 minting failed {:?}", res);
 
     // Register accounts for both tokens
-    for account in [
-        alice.clone(),
-        bob.clone(),
-        contract_account.clone(),
-    ].iter() {
+    for account in [alice.clone(), bob.clone(), contract_account.clone()].iter() {
         // Register for both tokens
         register_account(account, &mt_contract, "1").await?;
         register_account(account, &mt_contract, "2").await?;
@@ -153,8 +150,9 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         contract.id(),
         "1",
         "50",
-        "Random message"
-    ).await?;
+        "Random message",
+    )
+    .await?;
 
     transfer_call_tokens(
         &alice,
@@ -162,8 +160,9 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         contract.id(),
         "2",
         "30",
-        "Random message"
-    ).await?;
+        "Random message",
+    )
+    .await?;
 
     // Check balances for both tokens
     check_balance(&contract_account, &mt_contract, "1", "50").await?;
@@ -171,9 +170,20 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     // Check all tokens for Alice in the contract
     let tokens_value = get_tokens_for_account(&contract, &contract_account, &alice.id()).await?;
-    assert_eq!(tokens_value.len(), 2, "Expected 2 tokens for Alice, got {}", tokens_value.len());
-    assert!(tokens_value.contains(&("1".to_string(), "50".to_string())), "Expected token 1 with balance 50");
-    assert!(tokens_value.contains(&("2".to_string(), "30".to_string())), "Expected token 2 with balance 30");
+    assert_eq!(
+        tokens_value.len(),
+        2,
+        "Expected 2 tokens for Alice, got {}",
+        tokens_value.len()
+    );
+    assert!(
+        tokens_value.contains(&("1".to_string(), "50".to_string())),
+        "Expected token 1 with balance 50"
+    );
+    assert!(
+        tokens_value.contains(&("2".to_string(), "30".to_string())),
+        "Expected token 2 with balance 30"
+    );
 
     // Bob sends 10 tokens of token 1 to the contract
     transfer_call_tokens(
@@ -182,31 +192,45 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         contract.id(),
         "1",
         "10",
-        "Random message"
-    ).await?;
+        "Random message",
+    )
+    .await?;
 
     // Check updated contract balance for token 1
-    check_balance(&contract_account, &mt_contract, "1", "60").await?; 
+    check_balance(&contract_account, &mt_contract, "1", "60").await?;
 
     // Check Bob's tokens in the contract
     let bob_tokens = get_tokens_for_account(&contract, &contract_account, &bob.id()).await?;
-    assert_eq!(bob_tokens.len(), 1, "Expected 1 token for Bob, got {}", bob_tokens.len());
-    assert!(bob_tokens.contains(&("1".to_string(), "10".to_string())), "Expected token 1 with balance 10");
+    assert_eq!(
+        bob_tokens.len(),
+        1,
+        "Expected 1 token for Bob, got {}",
+        bob_tokens.len()
+    );
+    assert!(
+        bob_tokens.contains(&("1".to_string(), "10".to_string())),
+        "Expected token 1 with balance 10"
+    );
 
     // Alice withdraws token 1
     withdraw_token(&contract, &alice, "1").await?;
 
-    // Check that contract's balance for token 1 has decreased by 50 
-    check_balance(&contract_account, &mt_contract, "1", "10").await?; 
+    // Check that contract's balance for token 1 has decreased by 50
+    check_balance(&contract_account, &mt_contract, "1", "10").await?;
 
     // Check that Alice's token 1 balance in the contract is now 0
     let alice_tokens = get_tokens_for_account(&contract, &contract_account, &alice.id()).await?;
-    assert!(alice_tokens.contains(&("1".to_string(), "0".to_string())), "Token 1 should be withdrawn");
-    assert!(alice_tokens.contains(&("2".to_string(), "30".to_string())), "Expected only token 2 with balance 30");
+    assert!(
+        alice_tokens.contains(&("1".to_string(), "0".to_string())),
+        "Token 1 should be withdrawn"
+    );
+    assert!(
+        alice_tokens.contains(&("2".to_string(), "30".to_string())),
+        "Expected only token 2 with balance 30"
+    );
 
     Ok(())
 }
-
 
 async fn create_subaccount(
     root: &near_workspaces::Account,
@@ -237,8 +261,11 @@ async fn check_balance(
         .transact()
         .await?;
     let balance_value: String = balance.json()?;
-    assert_eq!(balance_value, expected_balance, 
-        "Expected balance of token {} to be {}, got {}", token_id, expected_balance, balance_value);
+    assert_eq!(
+        balance_value, expected_balance,
+        "Expected balance of token {} to be {}, got {}",
+        token_id, expected_balance, balance_value
+    );
     Ok(())
 }
 
@@ -255,7 +282,12 @@ async fn register_account(
         }))
         .transact()
         .await?;
-    assert!(register.is_success(), "Account registration for token {} failed {:?}", token_id, register);
+    assert!(
+        register.is_success(),
+        "Account registration for token {} failed {:?}",
+        token_id,
+        register
+    );
     Ok(())
 }
 
@@ -276,7 +308,12 @@ async fn transfer_tokens(
         .deposit(NearToken::from_yoctonear(1))
         .transact()
         .await?;
-    assert!(transfer.is_success(), "Token {} transfer failed {:?}", token_id, transfer);
+    assert!(
+        transfer.is_success(),
+        "Token {} transfer failed {:?}",
+        token_id,
+        transfer
+    );
     Ok(())
 }
 
@@ -300,7 +337,12 @@ async fn transfer_call_tokens(
         .gas(Gas::from_tgas(100))
         .transact()
         .await?;
-    assert!(res.is_success(), "Token {} transfer_call failed {:?}", token_id, res);
+    assert!(
+        res.is_success(),
+        "Token {} transfer_call failed {:?}",
+        token_id,
+        res
+    );
     Ok(())
 }
 
@@ -336,6 +378,10 @@ async fn withdraw_token(
         .gas(Gas::from_tgas(100))
         .transact()
         .await?;
-    assert!(withdraw.is_success(), "Token withdrawal failed {:?}", withdraw);
+    assert!(
+        withdraw.is_success(),
+        "Token withdrawal failed {:?}",
+        withdraw
+    );
     Ok(())
 }

@@ -1,7 +1,8 @@
 use near_sdk::json_types::U128;
 use near_sdk::store::{IterableMap, LookupMap};
 use near_sdk::{
-    env, log, near, require, AccountId, BorshStorageKey, Gas, PanicOnDefault, PromiseOrValue, Promise, NearToken, PromiseError
+    env, log, near, require, AccountId, BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise,
+    PromiseError, PromiseOrValue,
 };
 use near_sdk_contract_tools::mt::Nep245Receiver;
 
@@ -88,7 +89,10 @@ impl Contract {
         let account_id = env::predecessor_account_id();
 
         // Update the balance of the account for the specific token to zero
-        let tokens = self.balances.get_mut(&account_id).unwrap_or_else(|| panic!("No tokens found for account"));
+        let tokens = self
+            .balances
+            .get_mut(&account_id)
+            .unwrap_or_else(|| panic!("No tokens found for account"));
         let amount = *tokens.get(&token_id).unwrap_or(&0u128);
         require!(amount > 0, "Token balance is zero");
         tokens.insert(token_id.clone(), 0);
@@ -100,28 +104,41 @@ impl Contract {
             .with_attached_deposit(NearToken::from_yoctonear(1))
             .with_static_gas(MT_TRANSFER_GAS)
             .mt_transfer(account_id.clone(), token_id.clone(), U128(amount))
-            .then(Self::ext(env::current_account_id())
-                .with_static_gas(CALLBACK_GAS)
-                .withdraw_callback(token_id, U128(amount), account_id)
+            .then(
+                Self::ext(env::current_account_id())
+                    .with_static_gas(CALLBACK_GAS)
+                    .withdraw_callback(token_id, U128(amount), account_id),
             )
     }
 
     #[private]
-    pub fn withdraw_callback(&mut self, #[callback_result] call_result: Result<U128, PromiseError>, token_id: String, amount: U128, account_id: AccountId) -> U128 {
+    pub fn withdraw_callback(
+        &mut self,
+        #[callback_result] call_result: Result<U128, PromiseError>,
+        token_id: String,
+        amount: U128,
+        account_id: AccountId,
+    ) -> U128 {
         if call_result.is_ok() {
             // Remove the token from the map
-            let tokens = self.balances.get_mut(&account_id).unwrap_or_else(|| panic!("No tokens found for account"));
+            let tokens = self
+                .balances
+                .get_mut(&account_id)
+                .unwrap_or_else(|| panic!("No tokens found for account"));
             tokens.remove(&token_id);
-            
+
             if tokens.is_empty() {
                 self.balances.remove(&account_id);
             }
-            
+
             log!("Token withdrawal successful");
             return U128(0);
         } else {
             // Restore the balance if withdrawal failed
-            let tokens = self.balances.get_mut(&account_id).unwrap_or_else(|| panic!("No tokens found for account"));
+            let tokens = self
+                .balances
+                .get_mut(&account_id)
+                .unwrap_or_else(|| panic!("No tokens found for account"));
             tokens.insert(token_id.clone(), amount.0);
             log!("Token withdrawal failed");
             return amount;

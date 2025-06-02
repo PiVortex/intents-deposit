@@ -1,4 +1,4 @@
-use near_sdk::{ext_contract, AccountId, json_types::U128};
+use near_sdk::{ext_contract, json_types::U128, AccountId};
 
 #[allow(dead_code)]
 #[ext_contract(mt_contract)]
