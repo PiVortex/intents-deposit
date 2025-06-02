@@ -1,8 +1,11 @@
 use near_sdk::json_types::U128;
 use near_sdk::store::{IterableMap, LookupMap};
 use near_sdk::{
-    env, log, near, require, AccountId, BorshStorageKey, PanicOnDefault, PromiseOrValue,
+    env, log, near, require, AccountId, BorshStorageKey, Gas, PanicOnDefault, PromiseOrValue, Promise, NearToken
 };
+
+pub mod ext_mt;
+use crate::ext_mt::*;
 
 #[near(contract_state)]
 #[derive(PanicOnDefault)]
@@ -18,6 +21,9 @@ pub enum StorageKey {
 }
 
 pub type TokenId = AccountId;
+
+pub const MT_TRANSFER_GAS: Gas = Gas::from_tgas(10);
+pub const CALLBACK_GAS: Gas = Gas::from_tgas(10);
 
 #[near]
 impl Contract {
@@ -60,16 +66,39 @@ impl Contract {
 
         require!(amount.0 > 0, "Amount must be greater than 0");
 
-        let tokens = self.get_or_create_token_map(previous_owner_id.clone());
-        tokens.insert(token_id.clone(), amount.0);
+        // If the previous owner has no tokens, create a new map for them
+        if self.balances.get(previous_owner_id).is_none() {
+            let new_map: IterableMap<TokenId, u128> = IterableMap::new(previous_owner_id.as_bytes());
+            self.balances.insert(previous_owner_id.clone(), new_map);
+        }
+
+        // Update the balance of the previous owner for the specific token
+        let tokens = self.balances.get_mut(previous_owner_id).unwrap();
+        let current_amount = tokens.get(token_id).unwrap_or(&0u128);
+        tokens.insert(token_id.clone(), current_amount + amount.0);
 
         log!("Deposited {} of token {}", amount.0, token_id);
 
         PromiseOrValue::Value(vec![U128(0)])
     }
 
-    pub fn withdraw_all(&mut self, account: AccountId, token: TokenId) {
-        // TODO
+
+    pub fn withdraw_token(&mut self, token_id: TokenId) -> Promise {
+        let account_id = env::predecessor_account_id();
+
+        // Update the balance of the account for the specific token to zero
+        let tokens = self.balances.get_mut(&account_id).unwrap_or_else(|| panic!("No tokens found for account"));
+        let amount = *tokens.get(&token_id).unwrap_or(&0u128);
+        require!(amount > 0, "Token balance is zero");
+        tokens.insert(token_id.clone(), 0);
+
+        log!("Withdrawing {} of token {}", amount, token_id);
+
+        // Transfer the full amount of the token to the user
+        mt_contract::ext(self.intents_contract_id.clone())
+            .with_attached_deposit(NearToken::from_yoctonear(1))
+            .with_static_gas(MT_TRANSFER_GAS)
+            .mt_transfer(account_id, token_id, U128(amount))
     }
 
     pub fn get_tokens_for_account(
@@ -91,17 +120,5 @@ impl Contract {
         } else {
             Vec::new()
         }
-    }
-
-    // Internal helper function
-    fn get_or_create_token_map(
-        &mut self,
-        account_id: AccountId,
-    ) -> &mut IterableMap<TokenId, u128> {
-        if !self.balances.contains_key(&account_id) {
-            self.balances
-                .insert(account_id.clone(), IterableMap::new(b"t".to_vec()));
-        }
-        self.balances.get_mut(&account_id).unwrap()
     }
 }
