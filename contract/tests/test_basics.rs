@@ -175,6 +175,35 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     assert!(tokens_value.contains(&("1".to_string(), "50".to_string())), "Expected token 1 with balance 50");
     assert!(tokens_value.contains(&("2".to_string(), "30".to_string())), "Expected token 2 with balance 30");
 
+    // Bob sends 10 tokens of token 1 to the contract
+    transfer_call_tokens(
+        &bob,
+        &mt_contract,
+        contract.id(),
+        "1",
+        "10",
+        "Random message"
+    ).await?;
+
+    // Check updated contract balance for token 1
+    check_balance(&contract_account, &mt_contract, "1", "60").await?; 
+
+    // Check Bob's tokens in the contract
+    let bob_tokens = get_tokens_for_account(&contract, &contract_account, &bob.id()).await?;
+    assert_eq!(bob_tokens.len(), 1, "Expected 1 token for Bob, got {}", bob_tokens.len());
+    assert!(bob_tokens.contains(&("1".to_string(), "10".to_string())), "Expected token 1 with balance 10");
+
+    // Alice withdraws token 1
+    withdraw_token(&contract, &alice, "1").await?;
+
+    // Check that contract's balance for token 1 has decreased by 50 
+    check_balance(&contract_account, &mt_contract, "1", "10").await?; 
+
+    // Check that Alice's token 1 balance in the contract is now 0
+    let alice_tokens = get_tokens_for_account(&contract, &contract_account, &alice.id()).await?;
+    assert!(alice_tokens.contains(&("1".to_string(), "0".to_string())), "Token 1 should be withdrawn");
+    assert!(alice_tokens.contains(&("2".to_string(), "30".to_string())), "Expected only token 2 with balance 30");
+
     Ok(())
 }
 
@@ -292,4 +321,21 @@ async fn get_tokens_for_account(
 
     let tokens_value: Vec<(String, String)> = tokens.json()?;
     Ok(tokens_value)
+}
+
+async fn withdraw_token(
+    contract: &near_workspaces::Contract,
+    account: &near_workspaces::Account,
+    token_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let withdraw = account
+        .call(contract.id(), "withdraw_token")
+        .args_json(serde_json::json!({
+            "token_id": token_id
+        }))
+        .gas(Gas::from_tgas(100))
+        .transact()
+        .await?;
+    assert!(withdraw.is_success(), "Token withdrawal failed {:?}", withdraw);
+    Ok(())
 }
