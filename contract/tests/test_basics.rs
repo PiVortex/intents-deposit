@@ -41,6 +41,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     // Deploy the contract
     let contract_wasm = near_workspaces::compile_project("./").await?;
+    // let contract_wasm = std::fs::read("./target/near/contract.wasm")?;
     let contract = contract_account.deploy(&contract_wasm).await?.unwrap();
 
     // Initialize the contract
@@ -56,7 +57,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     // Deploy the intents contract
     let mt_wasm = std::fs::read(MT_WASM_FILEPATH)?;
-    let mt_contract = sandbox.dev_deploy(&mt_wasm).await?;
+    let mt_contract = mt_contract_account.deploy(&mt_wasm).await?.unwrap();
 
     // Initialize the token contract with mt_admin as owner
     res = mt_contract
@@ -68,7 +69,6 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         .await?;
 
     assert!(res.is_success(), "MT contract initialization failed {:?}", res);
-
 
     let token_metadata = TokenMetadata  {
         title: Some("My Token".to_string()),
@@ -84,9 +84,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         reference_hash: None,
     };
 
-
-    let supply: Balance = 1000u128;
     // Create a new token
+    let supply: Balance = 1000u128;
     res = mt_admin
         .call(mt_contract.id(), "mt_mint")
         .args_json(json!({
@@ -94,11 +93,82 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
             "token_metadata": token_metadata,
             "supply": supply 
         }))
-        .deposit(NearToken::from_near(1)) // Attach some NEAR for storage
+        .deposit(NearToken::from_near(1)) 
         .transact()
         .await?;
 
+        
     assert!(res.is_success(), "Token minting failed {:?}", res);
+
+    // Register accounts in mt contract and send tokens to them
+    for account in [
+        alice.clone(),
+        bob.clone(),
+        contract_account.clone(),
+    ]
+    .iter()
+    {
+        let register = account
+            .call(mt_contract.id(), "register")
+            .args_json(serde_json::json!({"token_id": "1", "account_id": account.id() }))
+            .transact()
+            .await?;
+
+        assert!(register.is_success(), "Account registration failed {:?}", register);
+
+        // Don't send tokens to the contract account
+        if account.id() == contract_account.id() {
+            continue;
+        }
+
+        let transfer = mt_admin
+            .call(mt_contract.id(), "mt_transfer")
+            .args_json(serde_json::json!({"token_id": "1", "receiver_id": account.id(), "amount": "100" }))
+            .deposit(NearToken::from_yoctonear(1))
+            .transact()
+            .await?;
+
+        assert!(transfer.is_success(), "Token transfer failed {:?}", transfer);
+    }
+
+    // Alice deposits 50 tokens in the contract
+    res = alice
+        .call(mt_contract.id(), "mt_transfer_call")
+        .args_json(serde_json::json!({
+            "receiver_id": contract.id(),
+            "token_id": "1",
+            "amount": "50",
+            "msg": "Random message"
+        }))
+        .deposit(NearToken::from_yoctonear(1))
+        .gas(Gas::from_tgas(100))
+        .transact()
+        .await?;
+
+    assert!(res.is_success(), "Token transfer failed {:?}", res);
+
+    // Check if the contract has received the tokens
+    let balance = contract_account
+        .call(mt_contract.id(), "mt_balance_of")
+        .args_json(serde_json::json!({"account_id": contract_account.id(), "token_id": "1"}))
+        .transact()
+        .await?;
+
+    let balance_value: String = balance.json()?;
+    assert_eq!(balance_value, "50", "Expected balance to be 50, got {}", balance_value);
+
+    let tokens = contract_account
+        .call(contract.id(), "get_tokens_for_account")
+        .args_json(serde_json::json!({
+            "account": contract_account.id(),
+            "from_index": null,
+            "limit": null
+        }))
+        .transact()
+        .await?;
+
+    let tokens_value: Vec<(String, String)> = tokens.json()?;
+    println!("Tokens for contract: {:?}", tokens_value);
 
     Ok(())
 }
