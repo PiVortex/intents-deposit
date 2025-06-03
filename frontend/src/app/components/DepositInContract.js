@@ -1,0 +1,70 @@
+'use client';
+
+import { useState } from 'react';
+import { useWalletSelector } from '@near-wallet-selector/react-hook';
+
+const DepositInContract = ({ tokenId }) => {
+    const { signedAccountId, viewFunction, callFunction } = useWalletSelector();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(false);
+
+    const handleDeposit = async () => {
+        setLoading(true);
+        setError(null);
+        setSuccess(false);
+        try {
+            // 1. Fetch the user's full token balance
+            const balance = await viewFunction({
+                contractId: 'intents.near',
+                method: 'mt_balance_of',
+                args: {
+                    account_id: signedAccountId,
+                    token_id: `nep141:${tokenId}`
+                }
+            });
+            if (!balance || balance === '0') {
+                setError('No balance to deposit.');
+                setLoading(false);
+                return;
+            }
+
+            // 2. Prepare and send the mt_transfer_call transaction
+            await callFunction({
+                contractId: 'intents.near',
+                method: 'mt_transfer_call',
+                args: {
+                    receiver_id: process.env.NEXT_PUBLIC_CONTRACT_ID,
+                    amount: balance,
+                    msg: '',
+                    token_id: `nep141:${tokenId}`,
+                },
+                gas: '100000000000000', // 100 Tgas
+                deposit: '1', // 1 yoctoNEAR
+            });
+            setSuccess(true);
+        } catch (err) {
+            setError(err.message || 'Transaction failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100 mt-4">
+            <div className="flex justify-center">
+                <button
+                    onClick={handleDeposit}
+                    disabled={loading || !signedAccountId}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+                >
+                    {loading ? 'Depositing...' : 'Deposit All In Contract'}
+                </button>
+            </div>
+            {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
+            {success && <div className="text-green-600 mt-2 text-center">Deposit successful!</div>}
+        </div>
+    );
+};
+
+export default DepositInContract; 

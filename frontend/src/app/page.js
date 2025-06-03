@@ -8,6 +8,7 @@ import DepositAddress from './components/DepositAddress';
 import RecentDeposits from './components/RecentDeposits';
 import TokenBalance from './components/TokenBalance';
 import ViewContractBal from './components/ViewContractBal';
+import DepositInContract from './components/DepositInContract';
 
 export default function Home() {
   const [tokens, setTokens] = useState([]);
@@ -41,6 +42,7 @@ export default function Home() {
               <>
                 <AssetDetails asset={selectedToken} />
                 <div className="mt-8 space-y-4">
+                  <DepositAddress selectedAsset={selectedToken} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <TokenBalance 
                       tokenId={selectedToken.near_token_id} 
@@ -51,7 +53,7 @@ export default function Home() {
                       decimals={selectedToken.decimals}
                     />
                   </div>
-                  <DepositAddress selectedAsset={selectedToken} />
+                  <DepositInContract tokenId={selectedToken.near_token_id} />
                   <RecentDeposits selectedAsset={selectedToken} />
                 </div>
               </>

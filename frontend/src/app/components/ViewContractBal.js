@@ -46,8 +46,8 @@ const ViewContractBal = ({ tokenId, decimals }) => {
         return () => clearInterval(intervalId);
     }, [signedAccountId, tokenId, viewFunction]);
 
-    // Match TokenBalance disconnected, error, and loading UI
-    if (!signedAccountId || error || isLoading) {
+    // Only show loading UI if balance is null (initial load)
+    if (!signedAccountId || error || (isLoading && balance === null)) {
         return (
             <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
                 <h3 className="text-lg font-semibold text-indigo-600 mb-2">Contract Balance</h3>
