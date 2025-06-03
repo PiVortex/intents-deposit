@@ -63,9 +63,17 @@ impl Nep245Receiver for Contract {
             self.balances.insert(previous_owner_id.clone(), new_map);
         }
 
-        // Update the balance of the previous owner for the specific token
+        // Get the current balance of the previous owner for the specific token
         let tokens = self.balances.get_mut(previous_owner_id).unwrap();
         let current_amount = tokens.get(token_id).unwrap_or(&0u128);
+
+        // Cannot deposit while withdrawal is in progress
+        if current_amount == &0u128 {
+            log!("Withdrawal in progress");
+            return PromiseOrValue::Value(vec![U128(amount.0)]);
+        }
+
+        // Update the balance of the previous owner for the specific token
         tokens.insert(token_id.clone(), current_amount + amount.0);
 
         log!("Deposited {} of token {}", amount.0, token_id);
