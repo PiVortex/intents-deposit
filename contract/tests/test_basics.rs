@@ -1,4 +1,3 @@
-use near_workspaces::result::ExecutionFinalResult;
 use serde_json::json;
 mod utils;
 use utils::{
@@ -32,7 +31,7 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     let contract = contract_account.deploy(&contract_wasm).await?.unwrap();
 
     // Initialize the contract
-    let mut res: ExecutionFinalResult = contract
+    let mut res = contract
         .call("new")
         .args_json(json!({"intents_contract_id": mt_contract_account.id() }))
         .transact()
@@ -40,11 +39,11 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     assert!(res.is_success(), "Contract initialization failed {:?}", res);
 
-    // Deploy the intents contract
+    // Deploy the MT contract
     let mt_wasm = std::fs::read(MT_WASM_FILEPATH)?;
     let mt_contract = mt_contract_account.deploy(&mt_wasm).await?.unwrap();
 
-    // Initialize the token contract with mt_admin as owner
+    // Initialize the MT contract with mt_admin as owner
     res = mt_contract
         .call("new_default_meta")
         .args_json(json!({
@@ -63,20 +62,49 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     mint_token(&mt_admin, &mt_contract, "Token 1", 1000).await?;
     mint_token(&mt_admin, &mt_contract, "Token 2", 1000).await?;
 
-    // Register accounts for both tokens
+    // Deploy another MT contract
+    let faulty_mt_contract_account = create_subaccount(&root, "faulty_mt").await?;
+    let faulty_mt_wasm = std::fs::read(MT_WASM_FILEPATH)?;
+    let faulty_mt_contract = faulty_mt_contract_account.deploy(&faulty_mt_wasm).await?.unwrap();
+
+    // Initialize the faulty MT contract with mt_admin as owner
+    res = faulty_mt_contract
+        .call("new_default_meta")
+        .args_json(json!({
+            "owner_id": mt_admin.id()
+        }))
+        .transact()
+        .await?;
+
+    assert!(
+        res.is_success(),
+        "Faulty MT contract initialization failed {:?}",
+        res
+    );
+
+    // Mint a token in the faulty MT contract
+    mint_token(&mt_admin, &faulty_mt_contract, "Faulty Token", 1000).await?;
+
+    // Register accounts for all tokens in both MT contracts
     for account in [alice.clone(), bob.clone(), contract_account.clone()].iter() {
-        // Register for both tokens
+        // Register for both tokens in the main MT contract
         register_account(account, &mt_contract, "1").await?;
         register_account(account, &mt_contract, "2").await?;
+
+        // Register for the token in the faulty MT contract
+        register_account(account, &faulty_mt_contract, "1").await?;
 
         // Don't send tokens to the contract account
         if account.id() == contract_account.id() {
             continue;
         }
 
-        // Transfer both tokens
+        // Transfer both tokens in the main MT contract
         transfer_tokens(&mt_admin, &mt_contract, account.id(), "1", "100").await?;
         transfer_tokens(&mt_admin, &mt_contract, account.id(), "2", "100").await?;
+
+        // Transfer the token in the faulty MT contract
+        transfer_tokens(&mt_admin, &faulty_mt_contract, account.id(), "1", "100").await?;
     }
 
     // Alice deposits both tokens in the contract
@@ -90,6 +118,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     )
     .await?;
 
+    assert!(res.is_success(), "MT transfer_call should succeed, got {:?}", res);
+
     transfer_call_tokens(
         &alice,
         &mt_contract,
@@ -99,6 +129,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         "Random message",
     )
     .await?;
+
+    assert!(res.is_success(), "MT transfer_call should succeed, got {:?}", res);
 
     // Check balances for both tokens
     check_balance(&contract_account, &mt_contract, "1", "50").await?;
@@ -170,6 +202,25 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     // Check that Bob's token balance array is empty
     let bob_tokens = get_tokens_for_account(&contract, &contract_account, &bob.id()).await?;
     assert!(bob_tokens.is_empty(), "Expected Bob's token balance array to be empty after withdrawal, got {:?}", bob_tokens);
+
+    // Try to deposit with the faulty MT token
+    transfer_call_tokens(
+        &bob,
+        &faulty_mt_contract,
+        contract.id(),
+        "1",
+        "10",
+        "Random message",
+    )
+    .await?;
+
+    // Check that the contract's balance for the faulty token is 0
+    let contract_faulty_token_balance = get_token_balance_for_account(&contract, &contract_account, &contract_account.id(), "1").await?;
+    assert_eq!(contract_faulty_token_balance, None);
+
+    // Check that the contract's token map for the faulty token is empty
+    let contract_tokens = get_tokens_for_account(&contract, &contract_account, &bob.id()).await?;
+    assert!(contract_tokens.is_empty(), "Expected contract's token map to be empty for faulty token, got {:?}", contract_tokens);
 
     Ok(())
 }

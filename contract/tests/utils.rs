@@ -54,7 +54,7 @@ pub async fn mint_token(
         reference: None,
         reference_hash: None,
     };
-    
+
     let mint = mt_admin
         .call(mt_contract.id(), "mt_mint")
         .args_json(serde_json::json!({
