@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 import { formatDecimalAmount } from '../../utils/format';
 
-const ViewContractBal = ({ tokenId, decimals }) => {
+export default function ViewContractBal({ tokenId, decimals }) {
     const { signedAccountId, viewFunction } = useWalletSelector();
     const [balance, setBalance] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +68,4 @@ const ViewContractBal = ({ tokenId, decimals }) => {
             </div>
         </div>
     );
-};
-
-export default ViewContractBal; 
+} 

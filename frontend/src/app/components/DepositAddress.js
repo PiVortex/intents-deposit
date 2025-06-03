@@ -72,7 +72,7 @@ export default function DepositAddress({ selectedAsset }) {
   if (!signedAccountId) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100">
-        <h2 className="text-xl font-semibold text-indigo-600 mb-4">Deposit Information</h2>
+        <h2 className="text-xl font-semibold text-indigo-600 mb-4">Deposit Address</h2>
         <div className="text-center py-6">
           <p className="text-gray-600">Please connect your wallet to view deposit information</p>
         </div>
@@ -100,7 +100,7 @@ export default function DepositAddress({ selectedAsset }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100">
-      <h2 className="text-xl font-semibold text-indigo-600 mb-4">Deposit Information</h2>
+      <h2 className="text-xl font-semibold text-indigo-600 mb-4">Deposit Address</h2>
       <div className="space-y-3">
         <div>
           <span className="text-gray-600">Chain:</span>

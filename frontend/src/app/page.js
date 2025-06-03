@@ -6,9 +6,9 @@ import ChainSelector from './components/ChainSelector';
 import AssetDetails from './components/AssetDetails';
 import DepositAddress from './components/DepositAddress';
 import RecentDeposits from './components/RecentDeposits';
-import TokenBalance from './components/TokenBalance';
+import DepositBalance from './components/DepositBalance';
 import ViewContractBal from './components/ViewContractBal';
-import DepositInContract from './components/DepositInContract';
+import LockInContract from './components/LockInContract';
 
 export default function Home() {
   const [tokens, setTokens] = useState([]);
@@ -25,36 +25,41 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-indigo-600 mb-8">Multichain Deposit</h1>
         
-        <AssetSelector 
-          onAssetSelect={handleAssetSelect}
-          onTokensLoaded={setTokens}
-        />
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <div className="flex-1">
+            <AssetSelector 
+              onAssetSelect={handleAssetSelect}
+              onTokensLoaded={setTokens}
+            />
+          </div>
+          {selectedAsset && (
+            <div className="flex-1">
+              <ChainSelector 
+                tokens={tokens}
+                selectedAsset={selectedAsset}
+                onChainSelect={setSelectedToken}
+              />
+            </div>
+          )}
+        </div>
         
         {selectedAsset && (
           <>
-            <ChainSelector 
-              tokens={tokens}
-              selectedAsset={selectedAsset}
-              onChainSelect={setSelectedToken}
-            />
-            
             {selectedToken && (
               <>
                 <AssetDetails asset={selectedToken} />
                 <div className="mt-8 space-y-4">
                   <DepositAddress selectedAsset={selectedToken} />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <TokenBalance 
-                      tokenId={selectedToken.near_token_id} 
-                      decimals={selectedToken.decimals}
-                    />
-                    <ViewContractBal 
+                  <RecentDeposits selectedAsset={selectedToken} />
+                  <DepositBalance 
+                    tokenId={selectedToken.near_token_id} 
+                    decimals={selectedToken.decimals}
+                  />
+                  <LockInContract tokenId={selectedToken.near_token_id} />
+                  <ViewContractBal 
                       tokenId={selectedToken.near_token_id}
                       decimals={selectedToken.decimals}
                     />
-                  </div>
-                  <DepositInContract tokenId={selectedToken.near_token_id} />
-                  <RecentDeposits selectedAsset={selectedToken} />
                 </div>
               </>
             )}

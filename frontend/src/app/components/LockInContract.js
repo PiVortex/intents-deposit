@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
-const DepositInContract = ({ tokenId }) => {
+export default function LockInContract({ tokenId }) {
     const { signedAccountId, viewFunction, callFunction } = useWalletSelector();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -24,7 +24,7 @@ const DepositInContract = ({ tokenId }) => {
                 }
             });
             if (!balance || balance === '0') {
-                setError('No balance to deposit.');
+                setError('No balance to lock.');
                 setLoading(false);
                 return;
             }
@@ -58,13 +58,11 @@ const DepositInContract = ({ tokenId }) => {
                     disabled={loading || !signedAccountId}
                     className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
                 >
-                    {loading ? 'Depositing...' : 'Deposit All In Contract'}
+                    {loading ? 'Locking...' : 'Lock Funds In Contract'}
                 </button>
             </div>
             {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
-            {success && <div className="text-green-600 mt-2 text-center">Deposit successful!</div>}
+            {success && <div className="text-green-600 mt-2 text-center">Funds locked in contract!</div>}
         </div>
     );
-};
-
-export default DepositInContract; 
+} 

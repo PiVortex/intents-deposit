@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 import { formatDecimalAmount } from '../../utils/format';
 
-export default function TokenBalance({ tokenId, decimals }) {
+export default function DepositBalance({ tokenId, decimals }) {
   const { signedAccountId, viewFunction } = useWalletSelector();
   const [balance, setBalance] = useState(null);
   const [standard, setStandard] = useState(null);
