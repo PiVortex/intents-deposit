@@ -212,21 +212,21 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         "Expected token 1 with balance 10"
     );
 
-    // Alice withdraws token 1
-    withdraw_token(&contract, &alice, "1").await?;
+    // Alice withdraws token 2
+    withdraw_token(&contract, &alice, "2").await?;
 
-    // Check that contract's balance for token 1 has decreased by 50
-    check_balance(&contract_account, &mt_contract, "1", "10").await?;
+    // Check that contract's balance for token 2 has decreased by 30
+    check_balance(&contract_account, &mt_contract, "2", "0").await?;
 
-    // Check that Alice's token 1 balance in the contract is now 0
+    // Check that Alice's token 2 balance in the contract is now 0
     let alice_tokens = get_tokens_for_account(&contract, &contract_account, &alice.id()).await?;
     assert!(
-        alice_tokens.contains(&("1".to_string(), "0".to_string())),
-        "Token 1 should be withdrawn"
+        alice_tokens.contains(&("2".to_string(), "0".to_string())),
+        "Token 2 should be withdrawn"
     );
     assert!(
-        alice_tokens.contains(&("2".to_string(), "30".to_string())),
-        "Expected only token 2 with balance 30"
+        alice_tokens.contains(&("1".to_string(), "50".to_string())),
+        "Expected only token 1 with balance 50"
     );
 
     Ok(())

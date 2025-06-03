@@ -116,7 +116,7 @@ impl Contract {
     #[private]
     pub fn withdraw_callback(
         &mut self,
-        #[callback_result] call_result: Result<U128, PromiseError>,
+        #[callback_result] call_result: Result<(), PromiseError>,
         token_id: String,
         amount: U128,
         account_id: AccountId,
