@@ -1,6 +1,25 @@
+use near_sdk::near;
+use serde::Serialize;
+use near_sdk_v4::Balance;
 use near_workspaces::types::{AccountId, Gas, NearToken};
 
 const TEN_NEAR: NearToken = NearToken::from_near(10);
+
+#[near]
+#[derive(Serialize)]
+pub struct TokenMetadata {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub media: Option<String>,
+    pub media_hash: Option<String>,
+    pub issued_at: Option<String>,
+    pub expires_at: Option<String>,
+    pub starts_at: Option<String>,
+    pub updated_at: Option<String>,
+    pub extra: Option<String>,
+    pub reference: Option<String>,
+    pub reference_hash: Option<String>,
+}
 
 pub async fn create_subaccount(
     root: &near_workspaces::Account,
@@ -14,6 +33,40 @@ pub async fn create_subaccount(
         .unwrap();
 
     Ok(subaccount)
+}
+
+pub async fn mint_token(
+    mt_admin: &near_workspaces::Account,
+    mt_contract: &near_workspaces::Contract,
+    title: &str,
+    supply: Balance,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let token_metadata = TokenMetadata {
+        title: Some(title.to_string()),
+        description: None,
+        media: None,
+        media_hash: None,
+        issued_at: None,
+        expires_at: None,
+        starts_at: None,
+        updated_at: None,
+        extra: None,
+        reference: None,
+        reference_hash: None,
+    };
+    
+    let mint = mt_admin
+        .call(mt_contract.id(), "mt_mint")
+        .args_json(serde_json::json!({
+            "token_owner_id": mt_admin.id(),
+            "token_metadata": token_metadata,
+            "supply": supply
+        }))
+        .deposit(NearToken::from_near(1))
+        .transact()
+        .await?;
+    assert!(mint.is_success(), "Token minting failed {:?}", mint);
+    Ok(())
 }
 
 pub async fn check_balance(

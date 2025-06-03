@@ -1,8 +1,4 @@
-use near_sdk::near;
-use near_sdk_v4::Balance;
 use near_workspaces::result::ExecutionFinalResult;
-use near_workspaces::types::NearToken;
-use serde::Serialize;
 use serde_json::json;
 mod utils;
 use utils::{
@@ -14,23 +10,8 @@ use utils::{
     get_tokens_for_account,
     withdraw_token,
     get_token_balance_for_account,
+    mint_token,
 };
-
-#[near]
-#[derive(Serialize)]
-pub struct TokenMetadata {
-    pub title: Option<String>,
-    pub description: Option<String>,
-    pub media: Option<String>,
-    pub media_hash: Option<String>,
-    pub issued_at: Option<String>,
-    pub expires_at: Option<String>,
-    pub starts_at: Option<String>,
-    pub updated_at: Option<String>,
-    pub extra: Option<String>,
-    pub reference: Option<String>,
-    pub reference_hash: Option<String>,
-}
 
 const MT_WASM_FILEPATH: &str = "./tests/multi_token.wasm";
 
@@ -48,7 +29,6 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
 
     // Deploy the contract
     let contract_wasm = near_workspaces::compile_project("./").await?;
-    // let contract_wasm = std::fs::read("./target/near/contract.wasm")?;
     let contract = contract_account.deploy(&contract_wasm).await?.unwrap();
 
     // Initialize the contract
@@ -79,63 +59,9 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         res
     );
 
-    // After initializing the MT contract, mint two tokens
-    let token_metadata_1 = TokenMetadata {
-        title: Some("Token 1".to_string()),
-        description: None,
-        media: None,
-        media_hash: None,
-        issued_at: None,
-        expires_at: None,
-        starts_at: None,
-        updated_at: None,
-        extra: None,
-        reference: None,
-        reference_hash: None,
-    };
-
-    let token_metadata_2 = TokenMetadata {
-        title: Some("Token 2".to_string()),
-        description: None,
-        media: None,
-        media_hash: None,
-        issued_at: None,
-        expires_at: None,
-        starts_at: None,
-        updated_at: None,
-        extra: None,
-        reference: None,
-        reference_hash: None,
-    };
-
-    // Mint first token
-    let supply: Balance = 1000u128;
-    res = mt_admin
-        .call(mt_contract.id(), "mt_mint")
-        .args_json(json!({
-            "token_owner_id": mt_admin.id(),
-            "token_metadata": token_metadata_1,
-            "supply": supply
-        }))
-        .deposit(NearToken::from_near(1))
-        .transact()
-        .await?;
-
-    assert!(res.is_success(), "Token 1 minting failed {:?}", res);
-
-    // Mint second token
-    res = mt_admin
-        .call(mt_contract.id(), "mt_mint")
-        .args_json(json!({
-            "token_owner_id": mt_admin.id(),
-            "token_metadata": token_metadata_2,
-            "supply": supply
-        }))
-        .deposit(NearToken::from_near(1))
-        .transact()
-        .await?;
-
-    assert!(res.is_success(), "Token 2 minting failed {:?}", res);
+    // Mint two tokens
+    mint_token(&mt_admin, &mt_contract, "Token 1", 1000).await?;
+    mint_token(&mt_admin, &mt_contract, "Token 2", 1000).await?;
 
     // Register accounts for both tokens
     for account in [alice.clone(), bob.clone(), contract_account.clone()].iter() {
