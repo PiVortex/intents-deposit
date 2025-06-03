@@ -25,7 +25,8 @@ export default function TokenBalance({ tokenId, decimals }) {
             token_id: `nep141:${tokenId}`
           }
         });
-
+        console.log('nep141Balance', nep141Balance);
+        console.log('tokenId', tokenId);
         // Try NEP-245 if NEP-141 returns 0
         if (nep141Balance === '0') {
           const nep245Balance = await viewFunction({
@@ -36,6 +37,8 @@ export default function TokenBalance({ tokenId, decimals }) {
               token_id: `nep245:${tokenId}`
             }
           });
+          console.log('nep245Balance', nep245Balance);
+          console.log('tokenId', tokenId);
           if (nep245Balance === '0') {
             setBalance('0');
             setStandard(null);
@@ -106,9 +109,6 @@ export default function TokenBalance({ tokenId, decimals }) {
       <div className="text-gray-700">
         <div className="space-y-1">
           <div className="font-mono">{formatDecimalAmount(balance, decimals)}</div>
-          {standard && (
-            <div className="text-sm text-indigo-500">Using {standard}</div>
-          )}
         </div>
       </div>
     </div>
