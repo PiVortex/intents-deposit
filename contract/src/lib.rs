@@ -55,7 +55,7 @@ impl Nep245Receiver for Contract {
         let previous_owner_id = &previous_owner_ids[0];
         let amount = &amounts[0];
 
-        require!(amount.0 > 0, "Amount must be greater than 0");
+        require!(amount.0 > 0, "Withdrawal in progress, cannot deposit");
 
         // If the previous owner has no tokens, create a new map for them
         if self.balances.get(previous_owner_id).is_none() {
@@ -66,12 +66,6 @@ impl Nep245Receiver for Contract {
         // Get the current balance of the previous owner for the specific token
         let tokens = self.balances.get_mut(previous_owner_id).unwrap();
         let current_amount = tokens.get(token_id).unwrap_or(&0u128);
-
-        // Cannot deposit while withdrawal is in progress
-        if current_amount == &0u128 {
-            log!("Withdrawal in progress");
-            return PromiseOrValue::Value(vec![U128(amount.0)]);
-        }
 
         // Update the balance of the previous owner for the specific token
         tokens.insert(token_id.clone(), current_amount + amount.0);
