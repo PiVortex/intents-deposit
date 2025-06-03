@@ -185,6 +185,12 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         "Expected token 2 with balance 30"
     );
 
+    // Check token balances for Alice directly from the contract
+    let alice_token_1_balance = get_token_balance_for_account(&contract, &contract_account, &alice.id(), "1").await?;
+    assert_eq!(alice_token_1_balance, Some("50".to_string()));
+    let alice_token_2_balance = get_token_balance_for_account(&contract, &contract_account, &alice.id(), "2").await?;
+    assert_eq!(alice_token_2_balance, Some("30".to_string()));
+
     // Bob sends 10 tokens of token 1 to the contract
     transfer_call_tokens(
         &bob,
@@ -218,16 +224,9 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     // Check that contract's balance for token 2 has decreased by 30
     check_balance(&contract_account, &mt_contract, "2", "0").await?;
 
-    // Check that Alice's token 2 balance in the contract is now 0
-    let alice_tokens = get_tokens_for_account(&contract, &contract_account, &alice.id()).await?;
-    assert!(
-        alice_tokens.contains(&("2".to_string(), "0".to_string())),
-        "Token 2 should be withdrawn"
-    );
-    assert!(
-        alice_tokens.contains(&("1".to_string(), "50".to_string())),
-        "Expected only token 1 with balance 50"
-    );
+    // Check that Alice has no token 2
+    let alice_token_2_balance = get_token_balance_for_account(&contract, &contract_account, &alice.id(), "2").await?;
+    assert_eq!(alice_token_2_balance, None);
 
     Ok(())
 }
@@ -384,4 +383,22 @@ async fn withdraw_token(
         withdraw
     );
     Ok(())
+}
+
+async fn get_token_balance_for_account(
+    contract: &near_workspaces::Contract,
+    account: &near_workspaces::Account,
+    target_account: &AccountId,
+    token_id: &str,
+) -> Result<Option<String>, Box<dyn std::error::Error>> {
+    let res = account
+        .call(contract.id(), "get_token_balance_for_account")
+        .args_json(serde_json::json!({
+            "account": target_account,
+            "token_id": token_id
+        }))
+        .view()
+        .await?;
+    let balance: Option<String> = res.json()?;
+    Ok(balance)
 }

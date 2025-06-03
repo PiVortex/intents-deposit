@@ -167,4 +167,14 @@ impl Contract {
             Vec::new()
         }
     }
+
+    pub fn get_token_balance_for_account(
+        &self,
+        account: AccountId,
+        token_id: String,
+    ) -> Option<U128> {
+        self.balances
+            .get(&account)
+            .and_then(|tokens| tokens.get(&token_id).map(|amount| U128::from(*amount)))
+    }
 }
