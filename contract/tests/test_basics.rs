@@ -118,7 +118,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     )
     .await?;
 
-    assert!(res.is_success(), "MT transfer_call should succeed, got {:?}", res);
+    let token_1_balance = check_balance(&contract_account, &mt_contract, "1").await?;
+    assert_eq!(token_1_balance, "50");
 
     transfer_call_tokens(
         &alice,
@@ -130,11 +131,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     )
     .await?;
 
-    assert!(res.is_success(), "MT transfer_call should succeed, got {:?}", res);
-
-    // Check balances for both tokens
-    check_balance(&contract_account, &mt_contract, "1", "50").await?;
-    check_balance(&contract_account, &mt_contract, "2", "30").await?;
+    let token_2_balance = check_balance(&contract_account, &mt_contract, "2").await?;
+    assert_eq!(token_2_balance, "30");
 
     // Check all tokens for Alice in the contract
     let tokens_value = get_tokens_for_account(&contract, &contract_account, &alice.id()).await?;
@@ -171,7 +169,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     .await?;
 
     // Check updated contract balance for token 1
-    check_balance(&contract_account, &mt_contract, "1", "60").await?;
+    let token_1_balance = check_balance(&contract_account, &mt_contract, "1").await?;
+    assert_eq!(token_1_balance, "60");
 
     // Check Bob's tokens in the contract
     let bob_tokens = get_tokens_for_account(&contract, &contract_account, &bob.id()).await?;
@@ -189,8 +188,9 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     // Alice withdraws token 2
     withdraw_token(&contract, &alice, "2").await?;
 
-    // Check that contract's balance for token 2 has decreased by 30
-    check_balance(&contract_account, &mt_contract, "2", "0").await?;
+    // Check that contract's balance for token 2 is 0
+    let token_2_balance = check_balance(&contract_account, &mt_contract, "2").await?;
+    assert_eq!(token_2_balance, "0");
 
     // Check that Alice has no token 2
     let alice_token_2_balance = get_token_balance_for_account(&contract, &contract_account, &alice.id(), "2").await?;
@@ -221,6 +221,8 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
     // Check that the contract's token map for the faulty token is empty
     let contract_tokens = get_tokens_for_account(&contract, &contract_account, &bob.id()).await?;
     assert!(contract_tokens.is_empty(), "Expected contract's token map to be empty for faulty token, got {:?}", contract_tokens);
+
+    // TODO test intermediate state
 
     Ok(())
 }

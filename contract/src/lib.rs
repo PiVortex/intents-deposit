@@ -55,20 +55,28 @@ impl Nep245Receiver for Contract {
         let previous_owner_id = &previous_owner_ids[0];
         let amount = &amounts[0];
 
-        require!(amount.0 > 0, "Withdrawal in progress, cannot deposit");
+        require!(amount.0 > 0, "Cannot deposit 0 tokens");
 
         // If the previous owner has no tokens, create a new map for them
         if self.balances.get(previous_owner_id).is_none() {
             let new_map: IterableMap<String, u128> = IterableMap::new(previous_owner_id.as_bytes());
             self.balances.insert(previous_owner_id.clone(), new_map);
-        }
+        } 
 
         // Get the current balance of the previous owner for the specific token
         let tokens = self.balances.get_mut(previous_owner_id).unwrap();
-        let current_amount = tokens.get(token_id).unwrap_or(&0u128);
 
-        // Update the balance of the previous owner for the specific token
-        tokens.insert(token_id.clone(), current_amount + amount.0);
+        match tokens.get(token_id) {
+            None => {
+                // Token doesn't exist yet, set it to the amount
+                tokens.insert(token_id.clone(), amount.0);
+            },
+            Some(current_amount) => {
+                // Token exists, check if it's zero 
+                require!(*current_amount != 0u128, "Cannot deposit while withdrawal is in progress");
+                tokens.insert(token_id.clone(), current_amount + amount.0);
+            }
+        }
 
         log!("Deposited {} of token {}", amount.0, token_id);
 

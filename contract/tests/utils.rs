@@ -73,8 +73,7 @@ pub async fn check_balance(
     account: &near_workspaces::Account,
     mt_contract: &near_workspaces::Contract,
     token_id: &str,
-    expected_balance: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<String, Box<dyn std::error::Error>> {
     let balance = account
         .call(mt_contract.id(), "mt_balance_of")
         .args_json(serde_json::json!({
@@ -84,12 +83,7 @@ pub async fn check_balance(
         .transact()
         .await?;
     let balance_value: String = balance.json()?;
-    assert_eq!(
-        balance_value, expected_balance,
-        "Expected balance of token {} to be {}, got {}",
-        token_id, expected_balance, balance_value
-    );
-    Ok(())
+    Ok(balance_value)
 }
 
 pub async fn register_account(
