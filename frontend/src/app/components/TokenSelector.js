@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { getChainDisplayName } from '../../utils/chainNames';
 
-export default function AssetChainSelector({ onAssetSelect, onChainSelect, onTokensLoaded }) {
+export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLoaded }) {
   const [tokens, setTokens] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ export default function AssetChainSelector({ onAssetSelect, onChainSelect, onTok
             params: [{ chains: [] }],
           }),
         });
-        
+
         if (!response.ok) throw new Error('Failed to fetch assets');
         const data = await response.json();
         setTokens(data.result.tokens);

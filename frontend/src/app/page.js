@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import AssetChainSelector from './components/AssetChainSelector';
+import TokenSelector from './components/TokenSelector';
 import AssetDetails from './components/AssetDetails';
 import DepositAddress from './components/DepositAddress';
 import RecentDeposits from './components/RecentDeposits';
@@ -43,31 +43,26 @@ export default function Home() {
 
         {mode === 'deposit' && (
           <>
-            <AssetChainSelector
-              onAssetSelect={setSelectedAsset}
+            <TokenSelector
               onChainSelect={setSelectedToken}
               onTokensLoaded={setTokens}
             />
-            {selectedAsset && (
+            {selectedToken && (
               <>
-                {selectedToken && (
-                  <>
-                    <AssetDetails asset={selectedToken} />
-                    <div className="mt-8 space-y-4">
-                      <DepositAddress selectedAsset={selectedToken} />
-                      <RecentDeposits selectedAsset={selectedToken} />
-                      <DepositBalance 
-                        tokenId={selectedToken.near_token_id} 
-                        decimals={selectedToken.decimals}
-                      />
-                      <LockInContract tokenId={selectedToken.near_token_id} />
-                      <ViewContractBal 
-                          tokenId={selectedToken.near_token_id}
-                          decimals={selectedToken.decimals}
-                        />
-                    </div>
-                  </>
-                )}
+                <AssetDetails asset={selectedToken} />
+                <div className="mt-8 space-y-4">
+                  <DepositAddress selectedAsset={selectedToken} />
+                  <RecentDeposits selectedAsset={selectedToken} />
+                  <DepositBalance 
+                    tokenId={selectedToken.near_token_id} 
+                    decimals={selectedToken.decimals}
+                  />
+                  <LockInContract tokenId={selectedToken.near_token_id} />
+                  <ViewContractBal 
+                      tokenId={selectedToken.near_token_id}
+                      decimals={selectedToken.decimals}
+                    />
+                </div>
               </>
             )}
           </>
