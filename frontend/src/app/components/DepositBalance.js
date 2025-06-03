@@ -25,8 +25,6 @@ export default function DepositBalance({ tokenId, decimals }) {
             token_id: `nep141:${tokenId}`
           }
         });
-        console.log('nep141Balance', nep141Balance);
-        console.log('tokenId', tokenId);
         // Try NEP-245 if NEP-141 returns 0
         if (nep141Balance === '0') {
           const nep245Balance = await viewFunction({
@@ -37,8 +35,6 @@ export default function DepositBalance({ tokenId, decimals }) {
               token_id: `nep245:${tokenId}`
             }
           });
-          console.log('nep245Balance', nep245Balance);
-          console.log('tokenId', tokenId);
           if (nep245Balance === '0') {
             setBalance('0');
             setStandard(null);
