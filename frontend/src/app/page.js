@@ -78,7 +78,7 @@ export default function Home() {
                   tokenId={selectedWithdrawToken.intents_token_id} 
                   decimals={selectedWithdrawToken.decimals}
                 />
-                <WithdrawToken tokenId={selectedWithdrawToken.intents_token_id} />
+                <WithdrawToken selectedToken={selectedWithdrawToken} />
               </>
             )}
           </div>
