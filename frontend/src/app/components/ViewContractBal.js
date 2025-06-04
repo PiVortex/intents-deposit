@@ -23,7 +23,7 @@ export default function ViewContractBal({ tokenId, decimals }) {
                     method: 'get_token_balance_for_account',
                     args: {
                         account: signedAccountId,
-                        token_id: `nep141:${tokenId}`
+                        token_id: tokenId
                     }
                 });
 

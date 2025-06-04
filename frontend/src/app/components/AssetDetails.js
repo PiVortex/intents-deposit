@@ -28,7 +28,11 @@ export default function AssetDetails({ asset }) {
           <p className="font-medium text-gray-700 mt-1 break-all">{asset.defuse_asset_identifier}</p>
         </div>
         <div className="bg-white p-4 rounded-md shadow-sm">
-          <p className="text-sm text-indigo-500">NEAR Token Identifier</p>
+          <p className="text-sm text-indigo-500">Intents Token Id</p>
+          <p className="font-medium text-gray-700 mt-1 break-all">{asset.intents_token_id}</p>
+        </div>
+        <div className="bg-white p-4 rounded-md shadow-sm">
+          <p className="text-sm text-indigo-500">NEAR Token Id</p>
           <p className="font-medium text-gray-700 mt-1 break-all">{asset.near_token_id}</p>
         </div>
         <div className="bg-white p-4 rounded-md shadow-sm">

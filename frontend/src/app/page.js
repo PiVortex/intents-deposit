@@ -9,10 +9,12 @@ import DepositBalance from './components/DepositBalance';
 import ViewContractBal from './components/ViewContractBal';
 import LockInContract from './components/LockInContract';
 import UsersLockedTokens from './components/UsersLockedTokens';
+import WithdrawToken from './components/WithdrawToken';
 
 export default function Home() {
   const [tokens, setTokens] = useState([]);
   const [selectedToken, setSelectedToken] = useState(null);
+  const [selectedWithdrawToken, setSelectedWithdrawToken] = useState(null);
   const [mode, setMode] = useState('deposit'); 
 
   return (
@@ -48,12 +50,12 @@ export default function Home() {
                   <DepositAddress selectedAsset={selectedToken} />
                   <RecentDeposits selectedAsset={selectedToken} />
                   <DepositBalance 
-                    tokenId={selectedToken.near_token_id} 
+                    tokenId={selectedToken.intents_token_id} 
                     decimals={selectedToken.decimals}
                   />
-                  <LockInContract tokenId={selectedToken.near_token_id} />
+                  <LockInContract tokenId={selectedToken.intents_token_id} />
                   <ViewContractBal 
-                      tokenId={selectedToken.near_token_id}
+                      tokenId={selectedToken.intents_token_id}
                       decimals={selectedToken.decimals}
                     />
                 </div>
@@ -62,7 +64,14 @@ export default function Home() {
           </>
         )}
         {mode === 'withdraw' && (
-          <UsersLockedTokens tokens={tokens} />
+          <div className="space-y-4">
+            <UsersLockedTokens 
+              tokens={tokens} 
+              selectedToken={selectedWithdrawToken}
+              onTokenSelect={setSelectedWithdrawToken}
+            />
+            <WithdrawToken selectedToken={selectedWithdrawToken} />
+          </div>
         )}
       </div>
     </main>

@@ -7,7 +7,6 @@ import { formatDecimalAmount } from '../../utils/format';
 export default function DepositBalance({ tokenId, decimals }) {
   const { signedAccountId, viewFunction } = useWalletSelector();
   const [balance, setBalance] = useState(null);
-  const [standard, setStandard] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -16,36 +15,16 @@ export default function DepositBalance({ tokenId, decimals }) {
 
     const checkBalance = async () => {
       try {
-        // Try NEP-141 first
-        const nep141Balance = await viewFunction({
+        const balance = await viewFunction({
           contractId: 'intents.near',
           method: 'mt_balance_of',
           args: {
             account_id: signedAccountId,
-            token_id: `nep141:${tokenId}`
+            token_id: tokenId
           }
         });
-        // Try NEP-245 if NEP-141 returns 0
-        if (nep141Balance === '0') {
-          const nep245Balance = await viewFunction({
-            contractId: 'intents.near',
-            method: 'mt_balance_of',
-            args: {
-              account_id: signedAccountId,
-              token_id: `nep245:${tokenId}`
-            }
-          });
-          if (nep245Balance === '0') {
-            setBalance('0');
-            setStandard(null);
-          } else {
-            setBalance(nep245Balance);
-            setStandard('NEP-245');
-          }
-        } else {
-          setBalance(nep141Balance);
-          setStandard('NEP-141');
-        }
+
+        setBalance(balance);
         
         setError(null);
       } catch (error) {
@@ -56,7 +35,7 @@ export default function DepositBalance({ tokenId, decimals }) {
       }
     };
 
-    // Initial check
+      // Initial check
     checkBalance();
 
     // Set up polling interval

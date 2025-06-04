@@ -20,7 +20,7 @@ export default function LockInContract({ tokenId }) {
                 method: 'mt_balance_of',
                 args: {
                     account_id: signedAccountId,
-                    token_id: `nep141:${tokenId}`
+                    token_id: tokenId
                 }
             });
             if (!balance || balance === '0') {
@@ -37,7 +37,7 @@ export default function LockInContract({ tokenId }) {
                     receiver_id: process.env.NEXT_PUBLIC_CONTRACT_ID,
                     amount: balance,
                     msg: '',
-                    token_id: `nep141:${tokenId}`,
+                    token_id: tokenId,
                 },
                 gas: '100000000000000', // 100 Tgas
                 deposit: '1', // 1 yoctoNEAR

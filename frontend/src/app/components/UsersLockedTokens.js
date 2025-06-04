@@ -5,36 +5,44 @@ import { useWalletSelector } from '@near-wallet-selector/react-hook';
 import { formatDecimalAmount } from '../../utils/format';
 import { getChainDisplayName } from '../../utils/chainNames';
 
-export default function UsersLockedTokens({ tokens }) {
+export default function UsersLockedTokens({ tokens, selectedToken, onTokenSelect }) {
   const { signedAccountId, viewFunction } = useWalletSelector();
   const [lockedTokens, setLockedTokens] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fetchTokens = async () => {
+    if (!signedAccountId) return;
+    try {
+      const result = await viewFunction({
+        contractId: process.env.NEXT_PUBLIC_CONTRACT_ID,
+        method: 'get_tokens_for_account',
+        args: {
+          account: signedAccountId,
+          from_index: null,
+          limit: null,
+        },
+      });
+      setLockedTokens(result);
+    } catch (err) {
+      setError(err.message);
+      setLockedTokens([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!signedAccountId) return;
     setIsLoading(true);
     setError(null);
-    async function fetchTokens() {
-      try {
-        const result = await viewFunction({
-          contractId: process.env.NEXT_PUBLIC_CONTRACT_ID,
-          method: 'get_tokens_for_account',
-          args: {
-            account: signedAccountId,
-            from_index: null,
-            limit: null,
-          },
-        });
-        setLockedTokens(result);
-      } catch (err) {
-        setError(err.message);
-        setLockedTokens([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     fetchTokens();
+
+    // Set up the 5-second refresh interval
+    const intervalId = setInterval(fetchTokens, 5000);
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(intervalId);
   }, [signedAccountId, viewFunction]);
 
   const getTokenDetails = (tokenId) => {
@@ -66,8 +74,18 @@ export default function UsersLockedTokens({ tokens }) {
             ? getChainDisplayName(tokenDetails.defuse_asset_identifier.split(':')[0] + ':' + tokenDetails.defuse_asset_identifier.split(':')[1])
             : 'Unknown Chain';
           
+          const isSelected = selectedToken === tokenId;
+          
           return (
-            <li key={tokenId} className="py-4 flex justify-between items-center">
+            <li 
+              key={tokenId} 
+              className={`py-4 px-4 flex justify-between items-center cursor-pointer transition-all duration-150 rounded-lg ${
+                isSelected 
+                  ? 'bg-indigo-100 border-2 border-indigo-300 shadow-sm' 
+                  : 'hover:bg-indigo-50 border-2 border-transparent hover:border-indigo-200'
+              }`}
+              onClick={() => onTokenSelect(tokenId)}
+            >
               <div>
                 <p className="font-medium text-gray-700">
                   {tokenDetails?.asset_name || 'Unknown'} on {chainName}
