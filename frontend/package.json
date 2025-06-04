@@ -9,19 +9,20 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@defuse-protocol/defuse-sdk": "1.0.0-beta.139",
+    "@near-wallet-selector/core": "9.0.2",
     "@near-wallet-selector/meteor-wallet": "9.0.2",
     "@near-wallet-selector/modal-ui": "9.0.2",
     "@near-wallet-selector/react-hook": "9.0.2",
-    "@near-wallet-selector/core": "9.0.2",
+    "next": "15.3.3",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.3.3"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
-    "@eslint/eslintrc": "^3"
+    "tailwindcss": "^4"
   }
 }

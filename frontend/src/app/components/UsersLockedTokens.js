@@ -74,7 +74,7 @@ export default function UsersLockedTokens({ tokens, selectedToken, onTokenSelect
             ? getChainDisplayName(tokenDetails.defuse_asset_identifier.split(':')[0] + ':' + tokenDetails.defuse_asset_identifier.split(':')[1])
             : 'Unknown Chain';
           
-          const isSelected = selectedToken === tokenId;
+          const isSelected = selectedToken?.near_token_id === tokenDetails?.near_token_id;
           
           return (
             <li 
@@ -84,7 +84,7 @@ export default function UsersLockedTokens({ tokens, selectedToken, onTokenSelect
                   ? 'bg-indigo-100 border-2 border-indigo-300 shadow-sm' 
                   : 'hover:bg-indigo-50 border-2 border-transparent hover:border-indigo-200'
               }`}
-              onClick={() => onTokenSelect(tokenId)}
+              onClick={() => onTokenSelect(tokenDetails)}
             >
               <div>
                 <p className="font-medium text-gray-700">

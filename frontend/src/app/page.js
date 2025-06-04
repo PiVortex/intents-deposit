@@ -9,6 +9,7 @@ import DepositBalance from './components/DepositBalance';
 import ViewContractBal from './components/ViewContractBal';
 import LockInContract from './components/LockInContract';
 import UsersLockedTokens from './components/UsersLockedTokens';
+import UnlockToken from './components/UnlockToken';
 import WithdrawToken from './components/WithdrawToken';
 
 export default function Home() {
@@ -70,7 +71,16 @@ export default function Home() {
               selectedToken={selectedWithdrawToken}
               onTokenSelect={setSelectedWithdrawToken}
             />
-            <WithdrawToken selectedToken={selectedWithdrawToken} />
+            {selectedWithdrawToken && ( 
+              <>
+                <UnlockToken selectedToken={selectedWithdrawToken.intents_token_id} />
+                <DepositBalance 
+                  tokenId={selectedWithdrawToken.intents_token_id} 
+                  decimals={selectedWithdrawToken.decimals}
+                />
+                <WithdrawToken tokenId={selectedWithdrawToken.intents_token_id} />
+              </>
+            )}
           </div>
         )}
       </div>
