@@ -16,6 +16,7 @@ export default function Home() {
   const [tokens, setTokens] = useState([]);
   const [selectedToken, setSelectedToken] = useState(null);
   const [selectedWithdrawToken, setSelectedWithdrawToken] = useState(null);
+  const [selectedWithdrawTokenBalance, setSelectedWithdrawTokenBalance] = useState(null);
   const [mode, setMode] = useState('deposit'); 
 
   return (
@@ -77,8 +78,9 @@ export default function Home() {
                 <DepositBalance 
                   tokenId={selectedWithdrawToken.intents_token_id} 
                   decimals={selectedWithdrawToken.decimals}
+                  onBalanceChange={setSelectedWithdrawTokenBalance}
                 />
-                <WithdrawToken selectedToken={selectedWithdrawToken} />
+                <WithdrawToken selectedToken={selectedWithdrawToken} balance={selectedWithdrawTokenBalance} />
               </>
             )}
           </div>

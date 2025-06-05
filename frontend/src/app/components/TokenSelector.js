@@ -27,7 +27,6 @@ export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLo
         if (!response.ok) throw new Error('Failed to fetch assets');
         const data = await response.json();
         setTokens(data.result.tokens);
-        console.log('data.result.tokens', data.result.tokens);
         onTokensLoaded && onTokensLoaded(data.result.tokens);
         // Set default asset and chain
         if (data.result.tokens.length > 0) {
