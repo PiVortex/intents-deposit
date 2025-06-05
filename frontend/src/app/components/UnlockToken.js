@@ -48,7 +48,7 @@ export default function UnlockToken({ selectedToken }) {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
                 >
-                    {loading ? 'Unlocking...' : 'Unlock Token'}
+                    {loading ? 'Unlocking...' : 'Unlock Token From Contract'}
                 </button>
             </div>
             {error && <div className="text-red-500 mt-2 text-center">{error}</div>}
