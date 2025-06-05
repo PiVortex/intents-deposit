@@ -4,60 +4,59 @@ import { formatDecimalAmount } from '../../utils/format';
 export default function RecentWithdrawals({ withdrawalHash }) {
   const [status, setStatus] = useState(null);
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [manualHash, setManualHash] = useState('');
-
-  // Use manualHash if set, otherwise use prop
-  const hashToUse = manualHash || withdrawalHash;
 
   useEffect(() => {
-    if (!hashToUse) return;
-    setLoading(true);
-    setError(null);
-    setStatus(null);
-    setData(null);
-    fetch('https://bridge.chaindefuser.com/rpc', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'withdrawal_status',
-        params: [ { withdrawal_hash: hashToUse } ]
-      })
-    })
-      .then(res => res.json())
-      .then(res => {
+    if (!withdrawalHash) return;
+
+    const fetchStatus = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('https://bridge.chaindefuser.com/rpc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'withdrawal_status',
+            params: [ { withdrawal_hash: withdrawalHash } ]
+          })
+        });
+        if (!response.ok) throw new Error('Failed to fetch withdrawal status');
+        const res = await response.json();
         if (res.result) {
           setStatus(res.result.status);
           setData(res.result.data);
         } else {
           setError('No result from API');
         }
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [hashToUse]);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Initial fetch
+    fetchStatus();
+    // Set up polling interval
+    const intervalId = setInterval(fetchStatus, 1000);
+    // Cleanup interval on unmount or when hash changes
+    return () => clearInterval(intervalId);
+  }, [withdrawalHash]);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md border border-indigo-100 mt-4">
       <h2 className="text-xl font-semibold text-indigo-600 mb-4">Recent Withdrawals</h2>
-      {/* TEMP: Manual hash input for testing */}
-      <div className="mb-4">
-        <label className="block text-gray-600 mb-1">Manual Withdrawal Hash (for testing):</label>
-        <input
-          type="text"
-          value={manualHash}
-          onChange={e => setManualHash(e.target.value)}
-          placeholder="Paste withdrawal hash here"
-          className="block w-full rounded border-gray-300 px-3 py-2 text-black"
-        />
-      </div>
-      {!hashToUse && <div className="text-gray-500 italic">Recent withdrawals will appear here.</div>}
-      {hashToUse && loading && <div className="text-indigo-600">Checking withdrawal status...</div>}
+      {!withdrawalHash && <div className="text-gray-500 italic">Recent withdrawals will appear here.</div>}
+      {isLoading && <div className="text-indigo-600">Checking withdrawal status...</div>}
+      {withdrawalHash && !isLoading && status === 'NOT_FOUND' && (
+        <div className="text-yellow-600">Pending... (withdrawal not found yet)</div>
+      )}
       {error && <div className="text-red-500">{error}</div>}
-      {hashToUse && !loading && !error && status && data && (
+      {withdrawalHash && !isLoading && status && data && status !== 'NOT_FOUND' && (
         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
           <div className="grid grid-cols-2 gap-4">
             <div>
