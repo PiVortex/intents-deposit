@@ -29,8 +29,9 @@ export default function LockInContract({ tokenId }) {
                 return;
             }
 
+            console.log("something");
             // 2. Prepare and send the mt_transfer_call transaction
-            await callFunction({
+            const result = await callFunction({
                 contractId: 'intents.near',
                 method: 'mt_transfer_call',
                 args: {

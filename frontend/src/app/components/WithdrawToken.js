@@ -4,8 +4,8 @@ import { useState } from "react";
 import { getChainDisplayName } from '../../utils/chainNames';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
-export default function WithdrawToken({ selectedToken, balance }) {
-    const { signedAccountId, callFunction } = useWalletSelector();
+export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
+    const { signedAccountId, callFunction, wallet } = useWalletSelector();
     const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -24,18 +24,40 @@ export default function WithdrawToken({ selectedToken, balance }) {
         setLoading(true);
         setError(null);
         try {
-            await callFunction({
-                contractId: "intents.near",
-                method: 'ft_withdraw',
-                args: {
-                    token: selectedToken.near_token_id,
-                    receiver_id: selectedToken.near_token_id,
-                    amount: balance,
-                    memo: `WITHDRAW_TO:${address}`,
-                },
-                gas: '100000000000000',
-                deposit: '1',
+            const outcome = await wallet.signAndSendTransaction({
+                receiverId: "intents.near",
+                actions: [
+                    {
+                        type: "FunctionCall",
+                        params: {
+                            methodName: "ft_withdraw",
+                            args: {
+                                token: selectedToken.near_token_id,
+                                receiver_id: selectedToken.near_token_id,
+                                amount: balance,
+                                memo: `WITHDRAW_TO:${address}`,
+                            },
+                            gas: "100000000000000",
+                            deposit: "1",
+                        },
+                    },
+                ],
             });
+            onWithdraw(outcome.transaction.hash);
+            console.log(outcome.transaction.hash);
+
+            // await callFunction({
+            //     contractId: "intents.near",
+            //     method: 'ft_withdraw',
+            //     args: {
+            //         token: selectedToken.near_token_id,
+            //         receiver_id: selectedToken.near_token_id,
+            //         amount: balance,
+            //         memo: `WITHDRAW_TO:${address}`,
+            //     },
+            //     gas: '100000000000000',
+            //     deposit: '1',
+            // });
             setAddress("");
         } catch (err) {
             setError(err.message || 'Error making withdrawal');

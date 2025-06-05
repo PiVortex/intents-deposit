@@ -17,6 +17,7 @@ export default function Home() {
   const [selectedToken, setSelectedToken] = useState(null);
   const [selectedTokenBalance, setSelectedTokenBalance] = useState(null);
   const [mode, setMode] = useState('deposit');
+  const [lastWithdrawalHash, setLastWithdrawalHash] = useState(null);
 
   return (
     <main className="min-h-screen bg-white p-8">
@@ -79,8 +80,8 @@ export default function Home() {
           {selectedToken && mode === 'withdraw' && (
             <div className="mt-8 space-y-4">
               <UnlockToken selectedToken={selectedToken.intents_token_id} />
-              <WithdrawToken selectedToken={selectedToken} balance={selectedTokenBalance} />
-              <RecentWithdrawals />
+              <WithdrawToken selectedToken={selectedToken} balance={selectedTokenBalance} onWithdraw={setLastWithdrawalHash} />
+              <RecentWithdrawals withdrawalHash={lastWithdrawalHash} />
             </div>
           )}
         </div>
