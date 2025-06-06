@@ -11,7 +11,11 @@ export default function DepositBalance({ tokenId, decimals, onBalanceChange }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!signedAccountId || !tokenId) return;
+    if (!signedAccountId || !tokenId) {
+      setBalance(null);
+      setIsLoading(false);
+      return;
+    }
 
     const checkBalance = async () => {
       try {
@@ -37,15 +41,17 @@ export default function DepositBalance({ tokenId, decimals, onBalanceChange }) {
       }
     };
 
-      // Initial check
+    // Initial check
     checkBalance();
 
     // Set up polling interval
     const intervalId = setInterval(checkBalance, 5000);
 
     // Cleanup interval on unmount or when dependencies change
-    return () => clearInterval(intervalId);
-  }, [signedAccountId, tokenId, viewFunction]);
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [signedAccountId, tokenId, viewFunction, onBalanceChange]);
 
   if (!signedAccountId) {
     return (

@@ -6,9 +6,7 @@ export default function WithdrawalStatus({ withdrawalHash }) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log("hello")
     if (!withdrawalHash) return;
-    console.log("hello2")
     const fetchStatus = async () => {
       try {
         const response = await fetch('https://bridge.chaindefuser.com/rpc', {
@@ -21,21 +19,16 @@ export default function WithdrawalStatus({ withdrawalHash }) {
             params: [ { withdrawal_hash: withdrawalHash } ]
           })
         });
-        console.log("hello3")
 
         if (!response.ok) {
           console.error('Failed to fetch withdrawal status');
         }
         
         const data = await response.json();
-        console.log("hello4")
         if (data.result) {
-          console.log("hello5")
-          console.log(data.result)
           setWithdrawal(data.result);
         } 
       } catch (error) {
-        console.log("hello6")
         console.error(error);
       }
     };

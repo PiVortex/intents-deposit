@@ -43,7 +43,7 @@ export default function RecentDeposits({ selectedAsset }) {
         
         // Check if we have deposits in the response
         if (data.result && data.result.deposits) {
-          setDeposits(data.result.deposits);
+          setDeposits([...data.result.deposits].reverse());
         } else {
           setDeposits([]);
         }
