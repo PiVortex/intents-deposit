@@ -10,7 +10,7 @@ import ViewContractBal from './components/ViewContractBal';
 import LockInContract from './components/LockInContract';
 import UnlockToken from './components/UnlockToken';
 import WithdrawToken from './components/WithdrawToken';
-import RecentWithdrawals from './components/RecentWithdrawals';
+import WithdrawalStatus from './components/WithdrawalStatus';
 
 export default function Home() {
   const [tokens, setTokens] = useState([]);
@@ -81,7 +81,7 @@ export default function Home() {
             <div className="mt-8 space-y-4">
               <UnlockToken selectedToken={selectedToken.intents_token_id} />
               <WithdrawToken selectedToken={selectedToken} balance={selectedTokenBalance} onWithdraw={setLastWithdrawalHash} />
-              <RecentWithdrawals withdrawalHash={lastWithdrawalHash} />
+              <WithdrawalStatus withdrawalHash={lastWithdrawalHash} />
             </div>
           )}
         </div>
