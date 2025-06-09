@@ -1,13 +1,10 @@
 # Multichain deposit 
 
 > [!WARNING]  
-> This technology has not yet undergone a formal audit. Use at your own risk. This example uses the depositing of real funds please conduct your own due diligence and exercise caution before integrating or relying on it.
-
-> Not all deposit chains have been tested and cannot be confirmed to be working and the intents infrastructure may be updated such that this example does not work.
-
-> This example only works on mainnet so funds are liable to be lost.
-
-> This example does not implement storage management.
+> - This technology has not yet undergone a formal audit. Use at your own risk. This example uses the depositing of real funds please conduct your own due diligence and exercise caution before integrating or relying on it.
+> - Not all deposit chains have been tested and cannot be confirmed to be working and the intents infrastructure may be updated such that this example does not work.
+> - This example only works on mainnet so funds are liable to be lost.
+> - This example does not implement storage management.
 
 ## Introduction
 
@@ -128,6 +125,7 @@ Unlocking and withdrawing feature in the same component/button click to decrease
 Bridges the tokens back to the native chain by calling `ft_withdraw` on the intents contract (ft because the tokens unwrapped representation on NEAR is a fungible token in the POA bridge case). `signAndSendTransaction` is used so the transaction hash of the call can be used in the next step. The user needs to specify the address on the foreign chain they want to withdraw to.
 
 [Source Code](./frontend/src/app/components/UnlockWithdrawToken.js#L99-L118)
+
 
 
 ## Further Work
