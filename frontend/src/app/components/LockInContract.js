@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
-export default function LockInContract({ tokenId }) {
+export default function LockInContract({ selectedToken }) {
     const { signedAccountId, viewFunction, callFunction } = useWalletSelector();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -14,13 +14,13 @@ export default function LockInContract({ tokenId }) {
         setError(null);
         setSuccess(false);
         try {
-            // 1. Fetch the user's full token balance
+            // Make a view call to the intents contract to get the deposit balance
             const balance = await viewFunction({
                 contractId: 'intents.near',
                 method: 'mt_balance_of',
                 args: {
                     account_id: signedAccountId,
-                    token_id: tokenId
+                    token_id: selectedToken.intents_token_id
                 }
             });
             if (!balance || balance === '0') {
@@ -29,8 +29,7 @@ export default function LockInContract({ tokenId }) {
                 return;
             }
 
-            console.log("something");
-            // 2. Prepare and send the mt_transfer_call transaction
+            // Make a call to the intents contract to lock all the funds in the contract
             const result = await callFunction({
                 contractId: 'intents.near',
                 method: 'mt_transfer_call',
@@ -38,10 +37,10 @@ export default function LockInContract({ tokenId }) {
                     receiver_id: process.env.NEXT_PUBLIC_CONTRACT_ID,
                     amount: balance,
                     msg: '',
-                    token_id: tokenId,
+                    token_id: selectedToken.intents_token_id,
                 },
-                gas: '100000000000000', // 100 Tgas
-                deposit: '1', // 1 yoctoNEAR
+                gas: '100000000000000',
+                deposit: '1',
             });
             setSuccess(true);
         } catch (err) {

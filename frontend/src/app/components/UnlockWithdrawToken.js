@@ -15,6 +15,7 @@ export default function UnlockWithdrawToken({ selectedToken, onWithdraw }) {
         return <div className="text-gray-500">Please select a token to withdraw.</div>;
     }
 
+    // Extract chain from the asset identifier
     const chain = selectedToken.defuse_asset_identifier
         ? selectedToken.defuse_asset_identifier.split(":").slice(0, 2).join(":")
         : "";
@@ -24,25 +25,25 @@ export default function UnlockWithdrawToken({ selectedToken, onWithdraw }) {
             setError('Please select a token to unlock');
             return;
         }
-
         setLoading(true);
         setError(null);
         setUnlockSuccess(false);
 
         try {
-            const result = await callFunction({
+            // Make a call to the contract to unlock the token
+            await callFunction({
                 contractId: process.env.NEXT_PUBLIC_CONTRACT_ID,
                 method: 'withdraw_token',
                 args: {
                     token_id: selectedToken.intents_token_id,
                 },
-                gas: '100000000000000', // 100 Tgas
+                gas: '100000000000000',
             });
-            console.log(result);
             setUnlockSuccess(true);
             return true;
         } catch (err) {
             setError(err.message || 'Unlock transaction failed');
+            console.error('Unlock error:', err);
             return false;
         } finally {
             setLoading(false);
@@ -51,6 +52,7 @@ export default function UnlockWithdrawToken({ selectedToken, onWithdraw }) {
 
     const getDepositBalance = async () => {
         try {
+            // Make a view call to the intents contract to get the deposit balance
             const balance = await viewFunction({
                 contractId: 'intents.near',
                 method: 'mt_balance_of',
@@ -68,11 +70,9 @@ export default function UnlockWithdrawToken({ selectedToken, onWithdraw }) {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        if (!selectedToken || !signedAccountId) return;
-        
+        if (!selectedToken || !signedAccountId) return;  
         setLoading(true);
         setError(null);
-        
         try {
             // Try to unlock the token, but continue even if it fails
             const unlockResult = await handleUnlock();
@@ -94,7 +94,8 @@ export default function UnlockWithdrawToken({ selectedToken, onWithdraw }) {
                 return;
             }
 
-            // Then proceed with withdrawal
+            // Make a call to the intents contract to withdraw and bridge the funds
+            // Use signAndSendTransaction so we can get the transaction hash
             const outcome = await wallet.signAndSendTransaction({
                 receiverId: "intents.near",
                 actions: [
@@ -115,9 +116,8 @@ export default function UnlockWithdrawToken({ selectedToken, onWithdraw }) {
                 ],
             });
             onWithdraw(outcome.transaction.hash);
-            console.log(outcome);
             setAddress("");
-            setUnlockSuccess(false); // Reset unlock success state
+            setUnlockSuccess(false);
         } catch (err) {
             setError(err.message || 'Error making withdrawal');
         } finally {

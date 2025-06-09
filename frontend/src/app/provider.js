@@ -7,9 +7,10 @@ import { Navigation } from './components/Navigation';
 
 const walletSelectorConfig = {
     network: "mainnet",
-    createAccessKeyFor: process.env.NEXT_PUBLIC_CONTRACT_ID,
+    // createAccessKeyFor: process.env.NEXT_PUBLIC_CONTRACT_ID,
     modules: [
       setupMeteorWallet(),
+      // Add other wallets here
     ],
   }
 

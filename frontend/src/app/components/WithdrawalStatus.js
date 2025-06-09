@@ -9,6 +9,7 @@ export default function WithdrawalStatus({ withdrawalHash }) {
     if (!withdrawalHash) return;
     const fetchStatus = async () => {
       try {
+        // Make an api call to get the withdrawal status for the withdrawal hash
         const response = await fetch('https://bridge.chaindefuser.com/rpc', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -33,11 +34,8 @@ export default function WithdrawalStatus({ withdrawalHash }) {
       }
     };
 
-    // Initial fetch
     fetchStatus();
-    // Set up polling interval
     const intervalId = setInterval(fetchStatus, 1000);
-    // Cleanup interval on unmount or when hash changes
     return () => clearInterval(intervalId);
   }, [withdrawalHash]);
 

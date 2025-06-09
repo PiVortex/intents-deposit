@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 import { formatDecimalAmount } from '../../utils/format';
 
-export default function DepositBalance({ tokenId, decimals, onBalanceChange }) {
+export default function DepositBalance({ selectedToken, setBalance, balance }) {
   const { signedAccountId, viewFunction } = useWalletSelector();
-  const [balance, setBalance] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!signedAccountId || !tokenId) {
+    if (!signedAccountId || !selectedToken) {
       setBalance(null);
       setIsLoading(false);
       return;
@@ -19,19 +18,17 @@ export default function DepositBalance({ tokenId, decimals, onBalanceChange }) {
 
     const checkBalance = async () => {
       try {
+        // Make a view call to the intents contract to get the balance of the token
         const balance = await viewFunction({
           contractId: 'intents.near',
           method: 'mt_balance_of',
           args: {
             account_id: signedAccountId,
-            token_id: tokenId
+            token_id: selectedToken.intents_token_id
           }
         });
 
         setBalance(balance);
-        if (onBalanceChange) {
-          onBalanceChange(balance);
-        }
         setError(null);
       } catch (error) {
         console.error('Error checking balance:', error);
@@ -41,17 +38,12 @@ export default function DepositBalance({ tokenId, decimals, onBalanceChange }) {
       }
     };
 
-    // Initial check
     checkBalance();
-
-    // Set up polling interval
     const intervalId = setInterval(checkBalance, 5000);
-
-    // Cleanup interval on unmount or when dependencies change
     return () => {
       clearInterval(intervalId);
     };
-  }, [signedAccountId, tokenId, viewFunction, onBalanceChange]);
+  }, [signedAccountId, selectedToken, viewFunction, setBalance, balance]);
 
   if (!signedAccountId) {
     return (
@@ -91,7 +83,7 @@ export default function DepositBalance({ tokenId, decimals, onBalanceChange }) {
       <h3 className="text-lg font-semibold text-indigo-600 mb-2">Token Balance</h3>
       <div className="text-gray-700">
         <div className="space-y-1">
-          <div className="font-mono">{formatDecimalAmount(balance, decimals)}</div>
+          <div className="font-mono">{formatDecimalAmount(balance, selectedToken.decimals)}</div>
         </div>
       </div>
     </div>

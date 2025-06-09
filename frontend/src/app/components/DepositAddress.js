@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getChainDisplayName } from '../../utils/chainNames';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
-export default function DepositAddress({ selectedAsset }) {
+export default function DepositAddress({ selectedToken }) {
   const { signedAccountId } = useWalletSelector();
   const [depositInfo, setDepositInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -12,15 +12,16 @@ export default function DepositAddress({ selectedAsset }) {
 
   useEffect(() => {
     async function fetchDepositAddress() {
-      if (!selectedAsset || !signedAccountId) return;
+      if (!selectedToken || !signedAccountId) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        // Extract chain from the asset identifier (e.g., "eth:1" from "eth:1:0x...")
-        const chain = selectedAsset.defuse_asset_identifier.split(':').slice(0, 2).join(':');
+          // Extract chain from the asset identifier
+        const chain = selectedToken.defuse_asset_identifier.split(':').slice(0, 2).join(':');
         
+        // Make an api call to get the deposit address
         const response = await fetch("https://bridge.chaindefuser.com/rpc", {
           method: "POST",
           headers: {
@@ -54,7 +55,7 @@ export default function DepositAddress({ selectedAsset }) {
     }
 
     fetchDepositAddress();
-  }, [selectedAsset, signedAccountId]);
+  }, [selectedToken, signedAccountId]);
 
   const handleCopy = async () => {
     if (!depositInfo?.address) return;
@@ -65,7 +66,7 @@ export default function DepositAddress({ selectedAsset }) {
     }
   };
 
-  if (!selectedAsset) return null;
+  if (!selectedToken) return null;
 
   if (!signedAccountId) {
     return (

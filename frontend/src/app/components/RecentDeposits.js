@@ -4,19 +4,21 @@ import { useState, useEffect } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 import { formatDecimalAmount } from '../../utils/format';
 
-export default function RecentDeposits({ selectedAsset }) {
+export default function RecentDeposits({ selectedToken }) {
   const { signedAccountId } = useWalletSelector();
   const [deposits, setDeposits] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!selectedAsset) return;
+    if (!selectedToken) return;
 
     const fetchDeposits = async () => {
       try {
-        const chain = selectedAsset.defuse_asset_identifier.split(':').slice(0, 2).join(':');
+        // Extract chain from the asset identifier
+        const chain = selectedToken.defuse_asset_identifier.split(':').slice(0, 2).join(':');
         
+        // Make an api call to get the recent deposits for the user and chain
         const response = await fetch("https://bridge.chaindefuser.com/rpc", {
           method: "POST",
           headers: {
@@ -40,9 +42,8 @@ export default function RecentDeposits({ selectedAsset }) {
         }
 
         const data = await response.json();
-        
-        // Check if we have deposits in the response
         if (data.result && data.result.deposits) {
+          // Reverse order of deposits to show the most recent first
           setDeposits([...data.result.deposits].reverse());
         } else {
           setDeposits([]);
@@ -51,23 +52,18 @@ export default function RecentDeposits({ selectedAsset }) {
       } catch (error) {
         console.error("Error fetching recent deposits:", error);
         setError(error.message);
-        setDeposits([]); // Reset deposits on error
+        setDeposits([]); 
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Initial fetch
     fetchDeposits();
-
-    // Set up polling interval
     const intervalId = setInterval(fetchDeposits, 1000);
-
-    // Cleanup interval on unmount or when selectedAsset changes
     return () => clearInterval(intervalId);
-  }, [selectedAsset]);
+  }, [selectedToken]);
 
-  if (!selectedAsset) return null;
+  if (!selectedToken) return null;
 
   if (error) {
     return (

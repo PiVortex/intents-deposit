@@ -14,8 +14,8 @@ import WithdrawalStatus from './components/WithdrawalStatus';
 export default function Home() {
   const [selectedToken, setSelectedToken] = useState(null);
   const [selectedTokenBalance, setSelectedTokenBalance] = useState(null);
-  const [mode, setMode] = useState('deposit');
   const [lastWithdrawalHash, setLastWithdrawalHash] = useState(null);
+  const [mode, setMode] = useState('deposit');
 
   return (
     <main className="min-h-screen bg-white p-8">
@@ -33,15 +33,14 @@ export default function Home() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <DepositBalance 
-                tokenId={selectedToken.intents_token_id} 
-                decimals={selectedToken.decimals}
-                onBalanceChange={setSelectedTokenBalance}
+                selectedToken={selectedToken} 
+                setBalance={setSelectedTokenBalance}
+                balance={selectedTokenBalance}
               />
             </div>
             <div className="flex-1">
               <ViewContractBal 
-                tokenId={selectedToken.intents_token_id}
-                decimals={selectedToken.decimals}
+                selectedToken={selectedToken}
               />
             </div>
           </div>
@@ -68,9 +67,9 @@ export default function Home() {
 
           {selectedToken && mode === 'deposit' && (
             <div className="mt-8 space-y-4">
-              <DepositAddress selectedAsset={selectedToken} balance={selectedTokenBalance} />
-              <RecentDeposits selectedAsset={selectedToken} />
-              <LockInContract tokenId={selectedToken.intents_token_id} />
+              <DepositAddress selectedToken={selectedToken} balance={selectedTokenBalance} />
+              <RecentDeposits selectedToken={selectedToken} />
+              <LockInContract selectedToken={selectedToken} />
             </div>
           )}
 

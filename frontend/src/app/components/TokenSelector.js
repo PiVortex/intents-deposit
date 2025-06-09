@@ -14,6 +14,7 @@ export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLo
   useEffect(() => {
     async function fetchAssets() {
       try {
+        // Make an api call to get the supported tokens
         const response = await fetch('https://bridge.chaindefuser.com/rpc', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -28,31 +29,23 @@ export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLo
         if (!response.ok) throw new Error('Failed to fetch assets');
         const data = await response.json();
         
-        // Filter tokens based on tokenList and bridge type
+        // Filter to only have tokens that use the POA bridge
         const validTokens = data.result.tokens.filter(apiToken => {
-          const token_id = apiToken.intents_token_id;
-          console.log(token_id);
-          
-          // Check both standalone tokens and groupedTokens
+          const token_id = apiToken.intents_token_id; 
           return tokenList.some(listToken => {
-            // Check if it's a standalone token
             if (listToken.defuseAssetId === token_id && listToken.bridge === "poa") {
               return true;
             }
-            
-            // Check if it's in groupedTokens
             if (listToken.groupedTokens) {
               return listToken.groupedTokens.some(groupedToken => 
                 groupedToken.defuseAssetId === token_id && groupedToken.bridge === "poa"
               );
             }
-            
             return false;
           });
         });
 
         setTokens(validTokens);
-        console.log('Valid POA tokens:', validTokens);
         onTokensLoaded && onTokensLoaded(validTokens);
 
         // Set default asset and chain
@@ -60,7 +53,6 @@ export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLo
           const firstAsset = validTokens[0].asset_name;
           setSelectedAssetName(firstAsset);
           onAssetSelect && onAssetSelect(validTokens[0]);
-          // Find first chain for this asset
           const chainsForAsset = validTokens.filter(t => t.asset_name === firstAsset);
           if (chainsForAsset.length > 0) {
             setSelectedChainId(chainsForAsset[0].defuse_asset_identifier);
@@ -81,7 +73,6 @@ export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLo
   // Get chains for selected asset
   const availableChains = tokens.filter(token => token.asset_name === selectedAssetName);
 
-  // Handle asset change
   const handleAssetChange = (event) => {
     const assetName = event.target.value;
     setSelectedAssetName(assetName);
@@ -93,7 +84,6 @@ export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLo
     }
   };
 
-  // Handle chain change
   const handleChainChange = (event) => {
     setSelectedChainId(event.target.value);
     const selectedToken = tokens.find(t => t.defuse_asset_identifier === event.target.value);
