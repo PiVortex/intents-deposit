@@ -66,11 +66,15 @@ In the same button click, once the unlock has been completed, the user calls `ft
 
 #### Wallet 
 
-[provider.js](./frontend/src/app/provider.js) sets up the NEAR wallet selector and wraps the apps pages in the wallet selector context.
+Sets up the NEAR wallet selector and wraps the apps pages in the wallet selector context.
+
+[Source Code](./frontend/src/app/provider.js)
 
 #### Main page
 
-[page.js](./frontend/src/app/page.js) this page features all the frontend's components. 
+The main page features all the frontend's components. 
+
+[Source Code](./frontend/src/app/page.js)
 
 #### Available tokens  
 
@@ -79,6 +83,8 @@ The list of available tokens that the intents infrastructure supports can be fet
 [Source Code](./frontend/src/app/components/TokenSelector.js#L18-L27)
 
 #### Deposit Address 
+
+
 
 
 ## Further Work
