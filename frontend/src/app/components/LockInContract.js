@@ -30,7 +30,7 @@ export default function LockInContract({ selectedToken }) {
             }
 
             // Make a call to the intents contract to lock all the funds in the contract
-            const result = await callFunction({
+            await callFunction({
                 contractId: 'intents.near',
                 method: 'mt_transfer_call',
                 args: {

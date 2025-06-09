@@ -2,8 +2,11 @@
 
 > [!WARNING]  
 > This technology has not yet undergone a formal audit. Use at your own risk. This example uses the depositing of real funds please conduct your own due diligence and exercise caution before integrating or relying on it.
+
 > Not all deposit chains have been tested and cannot be confirmed to be working and the intents infrastructure may be updated such that this example does not work.
+
 > This example only works on mainnet so funds are liable to be lost.
+
 > This example does not implement storage management.
 
 ## Introduction
@@ -64,7 +67,7 @@ In the same button click, once the unlock has been completed, the user calls `ft
 
 ### Frontend
 
-#### Wallet 
+#### Wallet Setup
 
 Sets up the NEAR wallet selector and wraps the apps pages in the wallet selector context.
 
@@ -72,19 +75,59 @@ Sets up the NEAR wallet selector and wraps the apps pages in the wallet selector
 
 #### Main page
 
-The main page features all the frontend's components. 
+Features all the frontend's components. 
 
 [Source Code](./frontend/src/app/page.js)
 
-#### Available tokens  
+#### Get Available tokens  
 
-The list of available tokens that the intents infrastructure supports can be fetched by calling the bridge API. This example only supports tokens from the POA bridge so the available tokens are filtered appropriately by using a list of tokens and their respective bridges.
+Lists available tokens that the intents infrastructure supports can be fetched by calling the bridge API. This example only supports tokens from the POA bridge so the available tokens are filtered appropriately by using a list of tokens and their respective bridges.
 
 [Source Code](./frontend/src/app/components/TokenSelector.js#L18-L27)
 
-#### Deposit Address 
+#### Generate Deposit Address 
 
+Generates a deposit address for the desired chain and NEAR account Id. When funds are deposited the specified NEAR account Id becomes the owner of tokens in the NEAR intents contract.
 
+[Source Code](./frontend/src/app/components/DepositAddress.js#L21-L41)
+
+#### Get Recent Deposits 
+
+Fetches recent deposits into the intents contract/bridge and their status.
+
+[Source Code](./frontend/src/app/components/RecentDeposits.js#L19-L38)
+
+#### Get Deposit Balance
+
+Gets the total balance of the desired token from the intents contract.
+
+[Source Code](./frontend/src/app/components/DepositBalance.js#L22-L29)
+
+#### Lock in Contract
+
+Locks the tokens in the example contract. This is done by calling `mt_transfer_call` on the intents contract and specifying the example contract as an argument. The function transfers the tokens from the user to the example contract and calls the `mt_on_transfer` function on the example contract.
+
+[Source Code](./frontend/src/app/components/LockInContract.js#L33-L44)
+
+#### Get Contract Balance
+
+Views the balance of the tokens locked in the example contract for a specified account Id and token Id.
+
+[Source Code](./frontend/src/app/components/ViewContractBal.js#L22-L29)
+
+#### Unlock from Contract
+
+Sends the user back the tokens they had locked in the example contract for a specific token Id.
+
+Unlocking and withdrawing feature in the same component/button click to decrease the number of required steps for the user
+
+[Source Code](./frontend/src/app/components/UnlockWithdrawToken.js#L24-L41)
+
+#### Withdraw to Native Chain
+
+Bridges the tokens back to the native chain by calling `ft_withdraw` on the intents contract (ft because the tokens unwrapped representation on NEAR is a fungible token in the POA bridge case). `signAndSendTransaction` is used so the transaction hash of the call can be used in the next step. The user needs to specify the address on the foreign chain they want to withdraw to.
+
+[Source Code](./frontend/src/app/components/UnlockWithdrawToken.js#L99-L118)
 
 
 ## Further Work

@@ -18,7 +18,7 @@ export default function DepositAddress({ selectedToken }) {
       setError(null);
 
       try {
-          // Extract chain from the asset identifier
+        // Extract chain from the asset identifier
         const chain = selectedToken.defuse_asset_identifier.split(':').slice(0, 2).join(':');
         
         // Make an api call to get the deposit address
