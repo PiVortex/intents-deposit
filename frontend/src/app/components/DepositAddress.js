@@ -39,8 +39,6 @@ export default function DepositAddress({ selectedAsset }) {
           }),
         });
 
-        console.log(signedAccountId)
-
         if (!response.ok) {
           throw new Error('Failed to fetch deposit address');
         }

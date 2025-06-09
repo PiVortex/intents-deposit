@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getChainDisplayName } from '../../utils/chainNames';
+import { tokenList } from '../../utils/tokenList';
 
 export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLoaded }) {
   const [tokens, setTokens] = useState([]);
@@ -26,15 +27,41 @@ export default function TokenSelector({ onAssetSelect, onChainSelect, onTokensLo
 
         if (!response.ok) throw new Error('Failed to fetch assets');
         const data = await response.json();
-        setTokens(data.result.tokens);
-        onTokensLoaded && onTokensLoaded(data.result.tokens);
+        
+        // Filter tokens based on tokenList and bridge type
+        const validTokens = data.result.tokens.filter(apiToken => {
+          const token_id = apiToken.intents_token_id;
+          console.log(token_id);
+          
+          // Check both standalone tokens and groupedTokens
+          return tokenList.some(listToken => {
+            // Check if it's a standalone token
+            if (listToken.defuseAssetId === token_id && listToken.bridge === "poa") {
+              return true;
+            }
+            
+            // Check if it's in groupedTokens
+            if (listToken.groupedTokens) {
+              return listToken.groupedTokens.some(groupedToken => 
+                groupedToken.defuseAssetId === token_id && groupedToken.bridge === "poa"
+              );
+            }
+            
+            return false;
+          });
+        });
+
+        setTokens(validTokens);
+        console.log('Valid POA tokens:', validTokens);
+        onTokensLoaded && onTokensLoaded(validTokens);
+
         // Set default asset and chain
-        if (data.result.tokens.length > 0) {
-          const firstAsset = data.result.tokens[0].asset_name;
+        if (validTokens.length > 0) {
+          const firstAsset = validTokens[0].asset_name;
           setSelectedAssetName(firstAsset);
-          onAssetSelect && onAssetSelect(data.result.tokens[0]);
+          onAssetSelect && onAssetSelect(validTokens[0]);
           // Find first chain for this asset
-          const chainsForAsset = data.result.tokens.filter(t => t.asset_name === firstAsset);
+          const chainsForAsset = validTokens.filter(t => t.asset_name === firstAsset);
           if (chainsForAsset.length > 0) {
             setSelectedChainId(chainsForAsset[0].defuse_asset_identifier);
             onChainSelect && onChainSelect(chainsForAsset[0]);

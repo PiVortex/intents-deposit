@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { getChainDisplayName } from '../../utils/chainNames';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
-import bs58 from 'bs58';
 
 export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
     const { signedAccountId, wallet } = useWalletSelector();
@@ -25,30 +24,19 @@ export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
         setLoading(true);
         setError(null);
         try {
-            const isNep245 = selectedToken.intents_token_id.startsWith('nep245:');
-            const methodName = isNep245 ? 'mt_withdraw' : 'ft_withdraw';
-            const encodedAddress = bs58.encode(Buffer.from(address));
-            const args = isNep245 ? {
-                token: "v2_1.omni.hot.tg",
-                token_ids: ["137_11111111111111111111"],
-                amounts: [balance.toString()],
-                receiver_id: "v2_1.omni.hot.tg",
-                memo: encodedAddress
-            } : {
-                token: selectedToken.near_token_id,
-                receiver_id: selectedToken.near_token_id,
-                amount: balance,
-                memo: `WITHDRAW_TO:${address}`,
-            };
-
             const outcome = await wallet.signAndSendTransaction({
                 receiverId: "intents.near",
                 actions: [
                     {
                         type: "FunctionCall",
                         params: {
-                            methodName,
-                            args,
+                            methodName: "ft_withdraw",
+                            args: {
+                                token: selectedToken.near_token_id,
+                                receiver_id: selectedToken.near_token_id,
+                                amount: balance,
+                                memo: `WITHDRAW_TO:${address}`,
+                            },
                             gas: "100000000000000",
                             deposit: "1",
                         },
@@ -56,6 +44,7 @@ export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
                 ],
             });
             onWithdraw(outcome.transaction.hash);
+            console.log(outcome);
             setAddress("");
         } catch (err) {
             setError(err.message || 'Error making withdrawal');
