@@ -82,6 +82,12 @@ Lists available tokens that the intents infrastructure supports can be fetched b
 
 [Source Code](./frontend/src/app/components/TokenSelector.js#L18-L27)
 
+#### Display Token Details 
+
+Shows the token details for a specified token.
+
+[Source Code](./frontend/src/app/components/AssetDetails.js)
+
 #### Generate Deposit Address 
 
 Generates a deposit address for the desired chain and NEAR account Id. When funds are deposited the specified NEAR account Id becomes the owner of tokens in the NEAR intents contract.
@@ -126,7 +132,56 @@ Bridges the tokens back to the native chain by calling `ft_withdraw` on the inte
 
 [Source Code](./frontend/src/app/components/UnlockWithdrawToken.js#L99-L118)
 
+#### Get Withdrawal Status
 
+Gets the withdrawal status of bridging for a specified NEAR transaction hash by calling the bridge API.
+
+[Source Code](./frontend/src/app/components/WithdrawalStatus.js#L13-L22)
+
+### Example Contract 
+
+The example contract simply just allows users to deposit into the contract with the intents multi-token, withdraw and view their balances. Tokens balances are stored in a nested map of token Id and the user's account Id.
+
+#### Deposit Function
+
+The `mt_on_transfer` function is called when the user calls `mt_transfer_call` on the intents contract, it provides the amount of tokens transferred and the account Id of the sender.
+The contract implements the `Nep245Receiver` from `near-sdk-contract-tools` so the vector arguments are properly deserialized from the cross contract call and to ensure that the function matches the NEP-245 standard interface.
+
+The function:
+1) Checks only one token is being transferred (multi-tokens support the transferring of multiple assets at once).
+2) Only allows deposits from the intents contract.
+3) Creates the user a new token map if one is not already created.
+4) Checks the token balance for the user and the deposited token, there are three cases:
+    1) The token entry does not yet exist, thus a new entry is created with the amount deposited.
+    2) The token entry exists but its balance is 0, this means a withdrawal is already in progress so the contract panics.
+    3) The token entry exists and is not 0, the amount deposited is added to the existing balance.
+5) The function returns 0 to show that all tokens have been used by the call if the call was successful up to this point.
+
+[Source Code](./contract/src/lib.rs#L28-L88)
+
+#### Withdraw Token Function
+
+This function withdraws the entire users balance for a specified token. This function can be adapted so a specific amount to withdraw cna be specified.
+
+The function:
+1) Gets the user's balance for the token specified (if the balance is 0 it means either a withdrawal is in progress or the user doesn't have balance for that token so the contract panics).
+3) The users balance is set to 0.
+3) A cross contract call of `mt_transfer` is made the intents contract to send the tokens to the user.
+4) A callback is used to check if the transfer was successful, if successful the token entry is removed, if not the contract state is reset.
+
+[Source Code](./contract/src/lib.rs#L101-L159)
+
+#### Get Token Balance 
+
+The contract implements a view function to view the number of tokens for a specific account and a specific token Id.
+
+[Source Code](./contract/src/lib.rs#L182-L190)
+
+#### Get Tokens for an Account
+
+The contract also has another view function (not used in the frontend) to see all the tokens and their balances for a specific account.
+
+[Source Code](./contract/src/lib.rs#L161-L180)
 
 ## Further Work
 - Migrate to decentralized bridges, support bridges other than POA (direct deposit, aurora, Hot and Omnibridge).

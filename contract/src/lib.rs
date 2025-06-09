@@ -68,11 +68,11 @@ impl Nep245Receiver for Contract {
 
         match tokens.get(token_id) {
             None => {
-                // Token doesn't exist yet, set it to the amount
+                // Token entry doesn't exist yet, set it to the amount
                 tokens.insert(token_id.clone(), amount.0);
             }
             Some(current_amount) => {
-                // Token exists, check if it's zero
+                // Token entry exists, check if it's zero
                 require!(
                     *current_amount != 0u128,
                     "Cannot deposit while withdrawal is in progress"
