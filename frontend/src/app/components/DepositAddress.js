@@ -106,6 +106,10 @@ export default function DepositAddress({ selectedToken }) {
           <span className="ml-2 font-mono text-gray-800">{getChainDisplayName(depositInfo.chain)}</span>
         </div>
         <div>
+          <span className="text-gray-600">Token:</span>
+          <span className="ml-2 font-mono text-gray-800">{selectedToken.asset_name}</span>
+        </div>
+        <div>
           <span className="text-gray-600">Address:</span>
           <div className="mt-1 flex items-center gap-2">
             <span className="font-mono text-gray-800 break-all">{depositInfo.address}</span>
