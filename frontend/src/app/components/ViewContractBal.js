@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 import { formatDecimalAmount } from '../../utils/format';
 
-export default function ViewContractBal({ tokenId, decimals }) {
+export default function ViewContractBal({ tokenId, decimals, onBalanceChange }) {
     const { signedAccountId, viewFunction } = useWalletSelector();
     const [balance, setBalance] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +28,10 @@ export default function ViewContractBal({ tokenId, decimals }) {
                 });
 
                 setBalance(result);
+                // Call the callback with the new balance
+                if (onBalanceChange) {
+                    onBalanceChange(result);
+                }
             } catch (err) {
                 console.error('Error fetching balance:', err);
                 setError(err.message);
@@ -44,7 +48,7 @@ export default function ViewContractBal({ tokenId, decimals }) {
 
         // Cleanup interval on unmount or when dependencies change
         return () => clearInterval(intervalId);
-    }, [signedAccountId, tokenId, viewFunction]);
+    }, [signedAccountId, tokenId, viewFunction, onBalanceChange]);
 
     // Only show loading UI if balance is null (initial load)
     if (!signedAccountId || error || (isLoading && balance === null)) {

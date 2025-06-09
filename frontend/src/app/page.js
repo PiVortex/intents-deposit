@@ -8,14 +8,13 @@ import RecentDeposits from './components/RecentDeposits';
 import DepositBalance from './components/DepositBalance';
 import ViewContractBal from './components/ViewContractBal';
 import LockInContract from './components/LockInContract';
-import UnlockToken from './components/UnlockToken';
-import WithdrawToken from './components/WithdrawToken';
+import UnlockWithdrawToken from './components/UnlockWithdrawToken';
 import WithdrawalStatus from './components/WithdrawalStatus';
 
 export default function Home() {
-  const [tokens, setTokens] = useState([]);
   const [selectedToken, setSelectedToken] = useState(null);
   const [selectedTokenBalance, setSelectedTokenBalance] = useState(null);
+  const [contractBalance, setContractBalance] = useState(null);
   const [mode, setMode] = useState('deposit');
   const [lastWithdrawalHash, setLastWithdrawalHash] = useState(null);
 
@@ -27,7 +26,6 @@ export default function Home() {
         <div className="mb-8">
           <TokenSelector
             onChainSelect={setSelectedToken}
-            onTokensLoaded={setTokens}
           />
           {selectedToken && (
             <>
@@ -45,6 +43,7 @@ export default function Home() {
               <ViewContractBal 
                 tokenId={selectedToken.intents_token_id}
                 decimals={selectedToken.decimals}
+                onBalanceChange={setContractBalance}
               />
             </div>
           </div>
@@ -79,8 +78,7 @@ export default function Home() {
 
           {selectedToken && mode === 'withdraw' && (
             <div className="mt-8 space-y-4">
-              <UnlockToken selectedToken={selectedToken.intents_token_id} />
-              <WithdrawToken selectedToken={selectedToken} balance={selectedTokenBalance} onWithdraw={setLastWithdrawalHash} />
+              <UnlockWithdrawToken selectedToken={selectedToken} contractBalance={contractBalance} onWithdraw={setLastWithdrawalHash} />
               <WithdrawalStatus withdrawalHash={lastWithdrawalHash} />
             </div>
           )}

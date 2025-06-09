@@ -4,11 +4,12 @@ import { useState } from "react";
 import { getChainDisplayName } from '../../utils/chainNames';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
-export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
-    const { signedAccountId, wallet } = useWalletSelector();
+export default function UnlockWithdrawToken({ selectedToken, contractBalance, onWithdraw }) {
+    const { signedAccountId, wallet, callFunction } = useWalletSelector();
     const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [unlockSuccess, setUnlockSuccess] = useState(false);
 
     if (!selectedToken) {
         return <div className="text-gray-500">Please select a token to withdraw.</div>;
@@ -18,12 +19,51 @@ export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
         ? selectedToken.defuse_asset_identifier.split(":").slice(0, 2).join(":")
         : "";
 
-    async function handleSubmit(e) {
-        e.preventDefault();
-        if (!selectedToken || !signedAccountId || !balance) return;
+    const handleUnlock = async () => {
+        if (!selectedToken) {
+            setError('Please select a token to unlock');
+            return;
+        }
+
         setLoading(true);
         setError(null);
+        setUnlockSuccess(false);
+
         try {
+            const result = await callFunction({
+                contractId: process.env.NEXT_PUBLIC_CONTRACT_ID,
+                method: 'withdraw_token',
+                args: {
+                    token_id: selectedToken.intents_token_id,
+                },
+                gas: '100000000000000', // 100 Tgas
+            });
+            console.log(result);
+            setUnlockSuccess(true);
+            return true;
+        } catch (err) {
+            setError(err.message || 'Unlock transaction failed');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        if (!selectedToken || !signedAccountId || !contractBalance) return;
+        
+        setLoading(true);
+        setError(null);
+        
+        try {
+            // First unlock the token
+            const unlockSuccess = await handleUnlock();
+            if (!unlockSuccess) {
+                return; // Stop if unlock failed
+            }
+
+            // Then proceed with withdrawal
             const outcome = await wallet.signAndSendTransaction({
                 receiverId: "intents.near",
                 actions: [
@@ -34,7 +74,7 @@ export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
                             args: {
                                 token: selectedToken.near_token_id,
                                 receiver_id: selectedToken.near_token_id,
-                                amount: balance,
+                                amount: contractBalance,
                                 memo: `WITHDRAW_TO:${address}`,
                             },
                             gas: "100000000000000",
@@ -46,6 +86,7 @@ export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
             onWithdraw(outcome.transaction.hash);
             console.log(outcome);
             setAddress("");
+            setUnlockSuccess(false); // Reset unlock success state
         } catch (err) {
             setError(err.message || 'Error making withdrawal');
         } finally {
@@ -75,12 +116,17 @@ export default function WithdrawToken({ selectedToken, balance, onWithdraw }) {
                 {error && (
                     <div className="text-red-500 bg-red-50 p-2 rounded border border-red-200">{error}</div>
                 )}
+                {unlockSuccess && (
+                    <div className="text-green-600 bg-green-50 p-2 rounded border border-green-200">
+                        Token unlocked successfully! Proceeding with withdrawal...
+                    </div>
+                )}
                 <button
                     type="submit"
-                    disabled={!address || !balance || loading}
+                    disabled={!address || !contractBalance || loading}
                     className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors duration-200 w-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? 'Processing...' : 'Withdraw'}
+                    {loading ? 'Processing...' : 'Unlock and Withdraw'}
                 </button>
             </form>
         </div>
