@@ -74,7 +74,11 @@ In the same button click, once the unlock has been completed, the user calls `ft
 
 #### Available tokens  
 
-The list of available tokens that the intents infrastructure supports can be fetched by calling the bridge API [CODE](./frontend/src/app/components/TokenSelector.js#L8-L27)
+The list of available tokens that the intents infrastructure supports can be fetched by calling the bridge API. This example only supports tokens from the POA bridge so the available tokens are filtered appropriately by using a list of tokens and their respective bridges.
+
+[Source Code](./frontend/src/app/components/TokenSelector.js#L18-L27)
+
+#### Deposit Address 
 
 
 ## Further Work
