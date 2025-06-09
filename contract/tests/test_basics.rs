@@ -1,5 +1,6 @@
 use serde_json::json;
 mod utils;
+use near_workspaces::types::Gas;
 use utils::{
     check_balance, create_subaccount, get_token_balance_for_account, get_tokens_for_account,
     mint_token, register_account, transfer_call_tokens, transfer_tokens, withdraw_token,
@@ -241,7 +242,46 @@ async fn test_contract_is_operational() -> Result<(), Box<dyn std::error::Error>
         contract_tokens
     );
 
-    // Need test for intermediate state
+    // Test balance whilst withdrawal is in progress
+    res = transfer_call_tokens(
+        &alice,
+        &mt_contract,
+        contract.id(),
+        "1",
+        "20",
+        "Random message",
+    )
+    .await?;
+    assert!(res.is_success(), "Token deposit failed {:?}", res);
+
+    // Spawn the withdrawal operation
+    let contract_clone = contract.clone();
+    let alice_clone = alice.clone();
+    tokio::spawn(async move {
+        alice_clone
+            .call(contract_clone.id(), "withdraw_token")
+            .args_json(serde_json::json!({
+                "token_id": "1"
+            }))
+            .gas(Gas::from_tgas(100))
+            .transact()
+            .await
+    });
+
+    // Check balance over multiple blocks to check its 0 at some point
+    let mut balance_found_zero = false;
+    for _ in 0..20 {
+        sandbox.fast_forward(1).await?;
+        let balance_during = get_token_balance_for_account(&contract, &alice.id(), "1").await?;
+        if balance_during == Some("0".to_string()) {
+            balance_found_zero = true;
+            break;
+        }
+    }
+    assert!(
+        balance_found_zero,
+        "Balance never reached 0 after 20 blocks"
+    );
 
     Ok(())
 }
