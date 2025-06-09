@@ -4,8 +4,8 @@ import { useState } from "react";
 import { getChainDisplayName } from '../../utils/chainNames';
 import { useWalletSelector } from '@near-wallet-selector/react-hook';
 
-export default function UnlockWithdrawToken({ selectedToken, contractBalance, onWithdraw }) {
-    const { signedAccountId, wallet, callFunction } = useWalletSelector();
+export default function UnlockWithdrawToken({ selectedToken, onWithdraw }) {
+    const { signedAccountId, wallet, callFunction, viewFunction } = useWalletSelector();
     const [address, setAddress] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -49,18 +49,49 @@ export default function UnlockWithdrawToken({ selectedToken, contractBalance, on
         }
     };
 
+    const getDepositBalance = async () => {
+        try {
+            const balance = await viewFunction({
+                contractId: 'intents.near',
+                method: 'mt_balance_of',
+                args: {
+                  account_id: signedAccountId,
+                  token_id: selectedToken.intents_token_id
+                }
+              });
+            return balance;
+        } catch (err) {
+            console.error('Error fetching contract balance:', err);
+            throw new Error('Failed to fetch contract balance');
+        }
+    };
+
     async function handleSubmit(e) {
         e.preventDefault();
-        if (!selectedToken || !signedAccountId || !contractBalance) return;
+        if (!selectedToken || !signedAccountId) return;
         
         setLoading(true);
         setError(null);
         
         try {
-            // First unlock the token
-            const unlockSuccess = await handleUnlock();
-            if (!unlockSuccess) {
-                return; // Stop if unlock failed
+            // Try to unlock the token, but continue even if it fails
+            const unlockResult = await handleUnlock();
+            if (unlockResult) {
+                setUnlockSuccess(true);
+            }
+
+            // Get the current contract balance
+            let depositBalance;
+            try {
+                depositBalance = await getDepositBalance();
+            } catch (err) {
+                setError('Failed to fetch balance. Please try again.');
+                return;
+            }
+
+            if (!depositBalance || depositBalance === "0") {
+                setError('No balance available to withdraw');
+                return;
             }
 
             // Then proceed with withdrawal
@@ -74,7 +105,7 @@ export default function UnlockWithdrawToken({ selectedToken, contractBalance, on
                             args: {
                                 token: selectedToken.near_token_id,
                                 receiver_id: selectedToken.near_token_id,
-                                amount: contractBalance,
+                                amount: depositBalance,
                                 memo: `WITHDRAW_TO:${address}`,
                             },
                             gas: "100000000000000",
@@ -123,7 +154,7 @@ export default function UnlockWithdrawToken({ selectedToken, contractBalance, on
                 )}
                 <button
                     type="submit"
-                    disabled={!address || !contractBalance || loading}
+                    disabled={!address || loading}
                     className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 transition-colors duration-200 w-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Processing...' : 'Unlock and Withdraw'}

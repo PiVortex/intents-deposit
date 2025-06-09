@@ -14,7 +14,6 @@ import WithdrawalStatus from './components/WithdrawalStatus';
 export default function Home() {
   const [selectedToken, setSelectedToken] = useState(null);
   const [selectedTokenBalance, setSelectedTokenBalance] = useState(null);
-  const [contractBalance, setContractBalance] = useState(null);
   const [mode, setMode] = useState('deposit');
   const [lastWithdrawalHash, setLastWithdrawalHash] = useState(null);
 
@@ -43,7 +42,6 @@ export default function Home() {
               <ViewContractBal 
                 tokenId={selectedToken.intents_token_id}
                 decimals={selectedToken.decimals}
-                onBalanceChange={setContractBalance}
               />
             </div>
           </div>
@@ -78,7 +76,7 @@ export default function Home() {
 
           {selectedToken && mode === 'withdraw' && (
             <div className="mt-8 space-y-4">
-              <UnlockWithdrawToken selectedToken={selectedToken} contractBalance={contractBalance} onWithdraw={setLastWithdrawalHash} />
+              <UnlockWithdrawToken selectedToken={selectedToken} onWithdraw={setLastWithdrawalHash} />
               <WithdrawalStatus withdrawalHash={lastWithdrawalHash} />
             </div>
           )}
