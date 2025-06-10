@@ -6,6 +6,11 @@
 > - This example is configured for mainnet only. Usage may result in permanent loss of funds.
 > - Storage management features are not implemented in this version.
 
+<video width="600" controls>
+  <source src="demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
 ## Introduction
 
 This example demonstrates how to deposit assets from various chains into a NEAR smart contract.
@@ -56,9 +61,9 @@ The intents contract is a `multi-token contract` itself, it keeps track of the b
 
 To lock the assets in a contract, the user calls the `mt_transfer_call` function on the `intents.near` multi-token contract with the target contract as an argument. This call transfers ownership of the tokens to the example contract and calls the `mt_on_transfer` function on the example contract. In this repo, the example contract just stores the number of locked tokens a user has for each token. The idea is that you will modify this contract to actually do something (staking, paying for services, prediction market, lending, etc).
 
-When a user wants to unlock the tokens from the example contract, they call the `withdraw` function on the example contract, which gets the balance of the user and transfers them that many tokens by making a [cross contract call](https://docs.near.org/smart-contracts/anatomy/crosscontract) to the `mt_transfer` function on the intents.near contract, then if the call is successful, removes the user's balance from the example contract.
+When a user wants to unlock the tokens from the example contract, they call the `withdraw` function on the example contract, which gets the balance of the user and transfers them that many tokens by making a [cross contract call](https://docs.near.org/smart-contracts/anatomy/crosscontract) to the `mt_transfer` function on the intents.near contract, then if the call is successful, removes the user's balance from the example contract. 
 
-In the same button click, once the unlock has been completed, the user calls `ft_withdraw` (ft because the tokens' unwrapped representation on NEAR is a fungible token in the POA bridge case), with args to withdraw to a certain address. This makes a call to the unwrapped representation token contract to bridge the funds to the specified address.
+In the same button click, once the unlock has been completed, the user calls `ft_withdraw` (ft because the tokens' unwrapped representation on NEAR is a fungible token in the POA bridge case), with args to withdraw to a certain address. This makes a call to the unwrapped representation token contract to bridge the funds to the specified address. When withdrawing a fee is taken as specified in the token details.
 
 ## Key parts 
 
@@ -128,7 +133,7 @@ Unlocking and withdrawing feature in the same component/button click to decrease
 
 #### Withdraw to Native Chain
 
-Bridges the tokens back to the chain they came from by calling `ft_withdraw` on the intents contract (ft because the tokens' unwrapped representation on NEAR is a fungible token in the POA bridge case). The user needs to specify the address on the foreign chain they want to withdraw to. `signAndSendTransaction` is used so the transaction hash of the call can be used in the next step. 
+Bridges the tokens back to the chain they came from by calling `ft_withdraw` on the intents contract (ft because the tokens' unwrapped representation on NEAR is a fungible token in the POA bridge case). The user needs to specify the address on the foreign chain they want to withdraw to. When withdrawing a fee is taken as specified in the token details. `signAndSendTransaction` is used so the transaction hash of the call can be used in the next step. 
 
 [Source Code](./frontend/src/app/components/UnlockWithdrawToken.js#L99-L118)
 
