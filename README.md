@@ -124,7 +124,7 @@ Sends the user back the tokens they had locked in the example contract for a spe
 
 Unlocking and withdrawing feature in the same component/button click to decrease the number of required steps for the user.
 
-[Source Code](./frontend/src/app/components/UnlockWithdrawToken.js#L24-L41)
+[Source Code](./frontend/src/app/components/UnlockWithdrawToken.js#L34-L41)
 
 #### Withdraw to Native Chain
 
