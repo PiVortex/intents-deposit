@@ -6,10 +6,7 @@
 > - This example is configured for mainnet only. Usage may result in permanent loss of funds.
 > - Storage management features are not implemented in this version.
 
-<video width="600" controls>
-  <source src="demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[![Demo Video](https://img.youtube.com/vi/vrDk02eqA8U/0.jpg)](https://youtu.be/vrDk02eqA8U?si=H_BYsPc6-wvA6213)
 
 ## Introduction
 
