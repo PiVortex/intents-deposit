@@ -191,5 +191,7 @@ The contract also has another view function (not used in the frontend) to see al
 
 Please feel free to contribute these!
 
+## Support 
+
 > [!TIP]
 > If you have questions regarding this repo or chain abstraction, please feel free to ask questions in our [Telegram Group](https://t.me/chain_abstraction) or join our [Office Hours](https://calendly.com/owen-proximity/office-hours).
